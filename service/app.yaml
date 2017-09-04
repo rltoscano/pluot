@@ -1,0 +1,10 @@
+application: pluot-toscano
+version: 1
+runtime: go
+api_version: go1.6
+
+handlers:
+- url: /svc/.*
+  script: _go_app
+- url: /debug
+  script: _go_app

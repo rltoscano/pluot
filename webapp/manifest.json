@@ -1,0 +1,6 @@
+{
+  "name": "pluot",
+  "short_name": "pluot",
+  "start_url": "/",
+  "display": "standalone"
+}

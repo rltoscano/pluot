@@ -1,0 +1,31 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-form/iron-form.html">
+
+<dom-module id="pluot-upload">
+  <template>
+    <style include="iron-flex iron-flex-alignment">
+    </style>
+    <iron-form allow-redirect="false">
+      <form method="post" action="/form/handler">
+        <div class="layout vertical">
+          <input type="file" name="csv"/>
+          <input type="text" name="parser"/>
+          <input type="submit"/>
+        </div>
+      </form>
+    </iron-form>
+
+  </template>
+  <script>
+      class PluotUpload extends Polymer.Element {
+        static get is() { return 'pluot-upload'; }
+        static get properties() {
+          return {};
+        }
+      }
+      window.customElements.define(PluotUpload.is, PluotUpload);
+    </script>
+
+  </dom-module>

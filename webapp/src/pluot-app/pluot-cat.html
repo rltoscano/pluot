@@ -1,0 +1,33 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<link rel="import" href="../../bower_components/neon-animation/web-animations.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+
+
+<dom-module id="pluot-cat">
+  <template>
+    <paper-dropdown-menu label="Category" no-label-float layered>
+      <paper-listbox slot="dropdown-content" selected="[[cat]]">
+        <paper-item>Uncategorized</paper-item>
+        <paper-item>Entertainment</paper-item>
+        <paper-item>Eating Out</paper-item>
+        <paper-item>Groceries</paper-item>
+        <paper-item>Shopping</paper-item>
+        <paper-item>Health</paper-item>
+      </paper-listbox>
+    </paper-dropdown-menu>
+  </template>
+  <script>
+    class PluotCat extends Polymer.Element {
+      static get is() { return 'pluot-cat'; }
+      static get properties() {
+        return {
+          cat: { type: Number, value: 0 }
+        };
+      }
+    }
+    window.customElements.define(PluotCat.is, PluotCat);
+  </script>
+</dom-module>
