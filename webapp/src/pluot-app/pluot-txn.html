@@ -2,6 +2,7 @@
 
 <link rel="import" href="pluot-cat.html">
 
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 
@@ -18,8 +19,18 @@
     <paper-item id="container" class="layout horizontal layout-start">
       <div id="date">[[_friendlyDate(txn.postDate)]]</div>
       <div id="displayName" class="flex">[[txn.originalDisplayName]]</div>
-      <pluot-cat cat="[[txn.category]]"></pluot-cat>
+      <pluot-cat cat="{{txn.category}}"></pluot-cat>
     </paper-item>
+
+    <iron-ajax
+        id="updateTxnAjax"
+        url="http://localhost:8080/svc/txns/[[txn.id]]"
+        method="POST"
+        body="[[txn]]"
+        handle-as="json"
+        last-response="[[txn]]"
+        debounce-duration="500">
+    </iron-ajax>
   </template>
 
   <script>
@@ -27,11 +38,14 @@
       static get is() { return 'pluot-txn'; }
       static get properties() {
         return {
-          txn: {
-            type: Object,
-            value: {}
-          }
+          txn: { type: Object },
+          _txnCatUpdateCount: { type: Number, value: 0 }
         };
+      }
+      static get observers() {
+        return [
+            '_handleTxnCategoryChange(txn.category)'
+        ];
       }
       _friendlyDate(str) {
         var d = new Date(Date.parse(str));
@@ -40,6 +54,13 @@
           day: 'numeric',
         };
         return d.toLocaleString('en-US', options);
+      }
+      _handleTxnCategoryChange(txnCategory) {
+        if (this._txnCatUpdateCount > 0) {
+          this.$.updateTxnAjax.generateRequest();
+        }
+        this._txnCatUpdateCount++;
+        console.log('Txn category changed, new: ' + txnCategory);
       }
     }
     window.customElements.define(PluotTxn.is, PluotTxn);

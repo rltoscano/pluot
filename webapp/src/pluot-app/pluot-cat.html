@@ -5,11 +5,10 @@
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
 
-
 <dom-module id="pluot-cat">
   <template>
     <paper-dropdown-menu label="Category" no-label-float layered>
-      <paper-listbox slot="dropdown-content" selected="[[cat]]">
+      <paper-listbox slot="dropdown-content" selected="{{cat}}">
         <paper-item>Uncategorized</paper-item>
         <paper-item>Entertainment</paper-item>
         <paper-item>Eating Out</paper-item>
@@ -24,7 +23,7 @@
       static get is() { return 'pluot-cat'; }
       static get properties() {
         return {
-          cat: { type: Number, value: 0 }
+          cat: { type: Number, notify: true, value: 1, reflectToAttribute: true }
         };
       }
     }

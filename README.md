@@ -14,6 +14,7 @@ Properties
 - category - Category
 - user_category
 - split - TxnSplit[]
+- last_updated - Timestamp
 
 ## TxnSplit
 A split of one transaction for the purpose of categorization.

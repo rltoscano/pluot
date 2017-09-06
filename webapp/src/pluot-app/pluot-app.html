@@ -38,6 +38,10 @@
       app-drawer-layout:not([narrow]) [drawer-toggle] {
         display: none;
       }
+      iron-pages {
+        flex: 1 1 auto;
+        display: flex;
+      }
       iron-list {
         flex: 1 1 auto;
       }
@@ -65,9 +69,9 @@
         </app-header>
 
         <iron-pages selected="[[appview]]" fullbleed>
-          <iron-list items="[[txnList.txns]]" as="txn">
+          <iron-list items="[[txnList.txns]]" as="txn" fullbleed>
             <template>
-              <pluot-txn txn=[[txn]]></pluot-txn>
+              <pluot-txn txn="[[txn]]"></pluot-txn>
             </template>
           </iron-list>
           <pluot-upload></pluot-upload>
