@@ -30,7 +30,7 @@ Properties
 - id - string
 - event_time - Timestamp
 - user - string
--
+- source - string
 
 
 # Processes

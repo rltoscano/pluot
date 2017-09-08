@@ -1,31 +1,131 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-form/iron-form.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
 
 <dom-module id="pluot-upload">
   <template>
     <style include="iron-flex iron-flex-alignment">
+      :host {
+        font-family: sans-serif;
+      }
+      td {
+        padding: 8px;
+      }
     </style>
-    <iron-form allow-redirect="false">
-      <form method="post" action="/form/handler">
-        <div class="layout vertical">
-          <input type="file" name="csv"/>
-          <input type="text" name="parser"/>
-          <input type="submit"/>
-        </div>
-      </form>
-    </iron-form>
+    <iron-ajax
+        id="checkUploadAjax"
+        url="http://localhost:8080/svc/uploads:check"
+        method="POST"
+        body="[[checkUploadReq]]"
+        content-type="application/x-www-form-urlencoded"
+        handle-as="json"
+        last-response="{{uploadCheckResp}}">
+    </iron-ajax>
+    <table>
+      <tr>
+        <td colspan="2">
+          <paper-dropdown-menu label="Source">
+            <paper-listbox attr-for-selected="source" slot="dropdown-content" selected="{{checkUploadReq.source}}">
+              <paper-item source="chase">Chase</paper-item>
+              <paper-item source="wellsfargo">Wellsfargo</paper-item>
+            </paper-listbox>
+          </paper-dropdown-menu>
+        </td>
+      </tr>
+      <tr>
+        <td>CSV File</td>
+        <td>
+          <input type="file"
+              id="csvFile"
+              required="true"
+              accept="text/csv"
+              on-change="_onCsvChange" />
+        </td>
+      </tr>
+      <tr>
+        <td>Start</td>
+        <td><input type="date" value="{{checkUploadReq.start}}"/></td>
+      </tr>
+      <tr>
+        <td>End (exclusive)</td>
+        <td><input type="date" value="{{checkUploadReq.end}}"/></td>
+      </tr>
+      <tr>
+        <td colspan="2">
+          <paper-button on-tap="_submitForm" raised>Check</paper-button>
+        </td>
+      </tr>
+    </table>
+    <div>TODO(robert): Duplicates shown here...</div>
+    <paper-button on-tap="_upload" raised>Upload</paper-button>
+    <iron-ajax
+        id="createUploadAjax"
+        url="http://localhost:8080/svc/uploads"
+        method="POST"
+        body="[[createUploadReq]]"
+        content-type="application/x-www-form-urlencoded"
+        handle-as="json"
+        last-response="{{createUploadResp}}"></iron-ajax>
 
   </template>
   <script>
-      class PluotUpload extends Polymer.Element {
-        static get is() { return 'pluot-upload'; }
-        static get properties() {
-          return {};
-        }
+    class PluotUpload extends Polymer.Element {
+      static get is() { return 'pluot-upload'; }
+      static get properties() {
+        return {
+          checkUploadReq: {
+            type: Object,
+            value: {
+              source: "chase",
+              csv: "",
+              start: "2010-01-01",
+              end: "2010-01-01"
+            }
+          },
+          createUploadReq: {
+            type: Object,
+            value: {
+              source: "chase",
+              csv: "",
+              start: "2010-01-01",
+              end: "2010-01-01",
+              ignore: ""
+            }
+          }
+        };
       }
-      window.customElements.define(PluotUpload.is, PluotUpload);
-    </script>
+      _submitForm() {
+        this.$.checkUploadAjax.generateRequest();
+      }
+      _onCsvChange(evt) {
+        var files = evt.target.files;
+        if (files.length < 1) {
+          return;
+        }
+        var r = new FileReader();
+        r.onload = this._onCsvLoaded.bind(this, r);
+        r.readAsText(files[0]);
+      }
+      _onCsvLoaded(r) {
+        this.checkUploadReq.csv = r.result;
+      }
+      _upload() {
+        this.createUploadReq.source = this.checkUploadReq.source;
+        this.createUploadReq.csv = this.checkUploadReq.csv;
+        this.createUploadReq.start = this.checkUploadReq.start;
+        this.createUploadReq.end = this.checkUploadReq.end;
+        // TODO(robert): Get value from UI.
+        this.createUploadReq.ignore = "";
+        this.$.createUploadAjax.generateRequest();
+      }
+    }
+    window.customElements.define(PluotUpload.is, PluotUpload);
+  </script>
 
-  </dom-module>
+</dom-module>
