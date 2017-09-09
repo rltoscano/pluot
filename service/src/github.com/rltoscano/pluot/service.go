@@ -33,6 +33,19 @@ func init() {
 			Methods:       map[string]pihen.RESTMethod{http.MethodPost: checkUpload},
 			AllowedOrigin: "http://localhost:8081",
 		},
+		{
+			URL: "/svc/rules",
+			Methods: map[string]pihen.RESTMethod{
+				http.MethodGet:  listRules,
+				http.MethodPost: createRule,
+			},
+			AllowedOrigin: "http://localhost:8081",
+		},
+		{
+			URL:           "/svc/rules/",
+			Methods:       map[string]pihen.RESTMethod{http.MethodDelete: deleteRule},
+			AllowedOrigin: "http://localhost:8081",
+		},
 	}
 	pihen.Bind(collections)
 	http.HandleFunc("/debug", debugHandler)

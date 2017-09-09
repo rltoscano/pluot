@@ -163,6 +163,20 @@ func createUpload(c context.Context, r *http.Request, u *user.User) (interface{}
 		}
 	}
 
+	// Apply rules.
+	rules, err := loadRules(c)
+	if err != nil {
+		return nil, err
+	}
+	for i, t := range filteredTxns {
+		for _, r := range rules {
+			if r.Applies(c, t) {
+				filteredTxns[i].Category = r.Category
+				break
+			}
+		}
+	}
+
 	// Record upload event.
 	// TODO(robert): Make this part of a transaction with above mutation.
 	// TODO(robert): Add user support.
