@@ -9,8 +9,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rltoscano/pihen"
+	"golang.org/x/net/context"
 	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/user"
 )
 
 // Transaction categories. Don't renumber these. Next: 6.
@@ -75,10 +78,33 @@ type CheckUploadResponse struct {
 }
 
 func init() {
-	http.HandleFunc("/svc/txns", listTxns)
-	http.HandleFunc("/svc/uploads:check", checkUpload)
-	http.HandleFunc("/svc/uploads", createUpload)
-	http.HandleFunc("/debug", debugHandler)
+	collections := []pihen.RESTCollection{
+		{
+			URLPrefix: "/svc/txns",
+			Methods: map[string]pihen.RESTMethod{
+				http.MethodGet: listTxns2,
+			},
+			AllowedOrigin: "http://localhost:8081",
+		},
+	}
+	pihen.Bind(collections)
+	// http.HandleFunc("/svc/txns", listTxns)
+	// http.HandleFunc("/svc/uploads:check", checkUpload)
+	// http.HandleFunc("/svc/uploads", createUpload)
+	// http.HandleFunc("/debug", debugHandler)
+}
+
+func listTxns2(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
+	q := datastore.NewQuery("Txn").Order("-PostDate")
+	var resp ListTxnsResponse
+	keys, err := q.GetAll(c, &resp.Txns)
+	if err != nil {
+		return nil, err
+	}
+	for i, k := range keys {
+		resp.Txns[i].ID = k.IntID()
+	}
+	return resp, nil
 }
 
 func listTxns(w http.ResponseWriter, r *http.Request) {
