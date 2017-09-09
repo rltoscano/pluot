@@ -33,11 +33,7 @@
       }
       _friendlyDate(str) {
         var d = new Date(Date.parse(str));
-        var options = {
-          month: 'short',
-          day: 'numeric',
-        };
-        return d.toLocaleString('en-US', options);
+        return d.toLocaleString('en-US', { month: 'short', day: 'numeric' });
       }
     }
     window.customElements.define(PluotTxn.is, PluotTxn);
