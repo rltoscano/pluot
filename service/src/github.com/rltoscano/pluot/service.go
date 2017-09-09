@@ -14,17 +14,18 @@ import (
 func init() {
 	collections := []pihen.RESTCollection{
 		{
-			URLPrefix: "/svc/txns",
-			Methods: map[string]pihen.RESTMethod{
-				http.MethodGet: listTxns,
-			},
+			URL:           "/svc/txns",
+			Methods:       map[string]pihen.RESTMethod{http.MethodGet: listTxns},
 			AllowedOrigin: "http://localhost:8081",
 		},
 		{
-			URLPrefix: "/svc/uploads",
-			Methods: map[string]pihen.RESTMethod{
-				http.MethodPost: postUpload,
-			},
+			URL:           "/svc/uploads",
+			Methods:       map[string]pihen.RESTMethod{http.MethodPost: createUpload},
+			AllowedOrigin: "http://localhost:8081",
+		},
+		{
+			URL:           "/svc/uploads:check",
+			Methods:       map[string]pihen.RESTMethod{http.MethodPost: checkUpload},
 			AllowedOrigin: "http://localhost:8081",
 		},
 	}

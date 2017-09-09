@@ -2,16 +2,17 @@ package pluot
 
 import (
 	"encoding/csv"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/rltoscano/pihen"
+
 	"golang.org/x/net/context"
-	"google.golang.org/appengine"
 	"google.golang.org/appengine/datastore"
+	"google.golang.org/appengine/log"
 	"google.golang.org/appengine/user"
 )
 
@@ -41,52 +42,50 @@ type CheckUploadResponse struct {
 	Duplicates []UploadDuplicate `json:"duplicates"`
 }
 
-func postUpload(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
-	return nil, nil
-}
-
-func checkUpload(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8081")
-	if r.Method == http.MethodOptions {
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		w.Header().Set("Access-Control-Allow-Methods", "POST")
-		return
-	}
+func checkUpload(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
+	// Parse and validate input.
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil, err
 	}
-	sourceName := r.Form["source"][0]
-	uploadedTxns, err := parseTxns(r.Form["csv"][0], sourceName)
+	if len(r.Form["source"]) == 0 {
+		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `source` parameter"}
+	}
+	if len(r.Form["csv"]) == 0 {
+		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `csv` parameter"}
+	}
+	if len(r.Form["start"]) == 0 {
+		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `start` parameter"}
+	}
+	if len(r.Form["end"]) == 0 {
+		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `end` parameter"}
+	}
+	uploadedTxns, err := parseTxns(r.Form["csv"][0], r.Form["source"][0])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		return nil, err
 	}
-
-	// Load existing transactions.
 	start, err := time.Parse("2006-01-02", r.Form["start"][0])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return nil, err
 	}
 	end, err := time.Parse("2006-01-02", r.Form["end"][0])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return nil, err
 	}
+
+	// Load existing transactions.
 	q := datastore.NewQuery("Txn").
 		Filter("PostDate <", end).
-		Filter("PostDate >", start).
-		Order("-PostDate")
-	existingTxns := make([]Txn, 0)
-	keys, err := q.GetAll(ctx, &existingTxns)
+		Filter("PostDate >", start)
+	existingTxns := []Txn{}
+	keys, err := q.GetAll(c, &existingTxns)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return nil, err
 	}
 	for i, k := range keys {
 		existingTxns[i].ID = k.IntID()
 	}
+	log.Debugf(c, "%d transactions loaded", len(existingTxns))
 
 	// Compare transactions.
 	duplicates := make([]UploadDuplicate, 0, len(existingTxns))
@@ -105,37 +104,41 @@ func checkUpload(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	jsonEncoder := json.NewEncoder(w)
-	jsonEncoder.Encode(CheckUploadResponse{duplicates})
+	return CheckUploadResponse{duplicates}, nil
 }
 
-func createUpload(w http.ResponseWriter, r *http.Request) {
-	ctx := appengine.NewContext(r)
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:8081")
-	if r.Method == http.MethodOptions {
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-		w.Header().Set("Access-Control-Allow-Methods", "POST")
-		return
-	}
+func createUpload(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return nil, err
+	}
+	if len(r.Form["source"]) == 0 {
+		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `source` parameter"}
+	}
+	if len(r.Form["csv"]) == 0 {
+		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `csv` parameter"}
+	}
+	if len(r.Form["start"]) == 0 {
+		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `start` parameter"}
+	}
+	if len(r.Form["end"]) == 0 {
+		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `end` parameter"}
+	}
+	if len(r.Form["ignore"]) == 0 {
+		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `ignore` parameter"}
 	}
 	sourceName := r.Form["source"][0]
 	uploadedTxns, err := parseTxns(r.Form["csv"][0], sourceName)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		return nil, err
 	}
-
 	start, err := time.Parse("2006-01-02", r.Form["start"][0])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return nil, err
 	}
 	end, err := time.Parse("2006-01-02", r.Form["end"][0])
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return nil, err
 	}
 
 	// TODO(robert): Filter out duplicates.
@@ -152,10 +155,9 @@ func createUpload(w http.ResponseWriter, r *http.Request) {
 		Start:     start,
 		End:       end,
 	}
-	k, err := datastore.Put(ctx, datastore.NewIncompleteKey(ctx, "UploadEvent", nil), &createUploadResp)
+	k, err := datastore.Put(c, datastore.NewIncompleteKey(c, "UploadEvent", nil), &createUploadResp)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+		return nil, err
 	}
 	createUploadResp.ID = k.IntID()
 
@@ -166,14 +168,28 @@ func createUpload(w http.ResponseWriter, r *http.Request) {
 	// Record transactions.
 	keys := make([]*datastore.Key, len(filteredTxns))
 	for i := range keys {
-		keys[i] = datastore.NewIncompleteKey(ctx, "Txn", nil)
+		keys[i] = datastore.NewIncompleteKey(c, "Txn", nil)
 	}
-	if _, err = datastore.PutMulti(ctx, keys, filteredTxns); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	if _, err = datastore.PutMulti(c, keys, filteredTxns); err != nil {
+		return nil, err
 	}
 
-	json.NewEncoder(w).Encode(createUploadResp)
+	return createUploadResp, nil
+}
+
+func parseTxns(csvStr string, source string) ([]Txn, error) {
+	csvRows, err := csv.NewReader(strings.NewReader(csvStr)).ReadAll()
+	if err != nil {
+		return nil, err
+	}
+	switch source {
+	case SourceChase:
+		return parseChase(csvRows)
+	case SourceWellsfargo:
+		return parseWellsfargo(csvRows)
+	default:
+		return nil, fmt.Errorf("unexpected source %v", source)
+	}
 }
 
 // Type, TransDate, PostDate, Description, Amount
@@ -200,19 +216,4 @@ func parseChase(csvRows [][]string) ([]Txn, error) {
 
 func parseWellsfargo(csvRows [][]string) ([]Txn, error) {
 	return nil, nil
-}
-
-func parseTxns(csvStr string, source string) ([]Txn, error) {
-	csvRows, err := csv.NewReader(strings.NewReader(csvStr)).ReadAll()
-	if err != nil {
-		return nil, err
-	}
-	switch source {
-	case SourceChase:
-		return parseChase(csvRows)
-	case SourceWellsfargo:
-		return parseWellsfargo(csvRows)
-	default:
-		return nil, fmt.Errorf("unexpected source %v", source)
-	}
 }
