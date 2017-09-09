@@ -22,10 +22,10 @@
         id="checkUploadAjax"
         url="http://localhost:8080/svc/uploads:check"
         method="POST"
-        body="[[checkUploadReq]]"
-        content-type="application/x-www-form-urlencoded"
+        body="[[uploadReq]]"
+        content-type="application/json"
         handle-as="json"
-        last-response="{{uploadCheckResp}}">
+        last-response="{{checkUploadResp}}">
     </iron-ajax>
     <table>
       <tr>
@@ -50,25 +50,29 @@
       </tr>
       <tr>
         <td>Start</td>
-        <td><input type="date" value="{{checkUploadReq.start}}"/></td>
+        <td><input id="start" type="date" on-change="_onStartChange"/></td>
       </tr>
       <tr>
         <td>End (exclusive)</td>
-        <td><input type="date" value="{{checkUploadReq.end}}"/></td>
+        <td><input id="end" type="date" on-change="_onEndChange"/></td>
       </tr>
       <tr>
         <td colspan="2">
-          <paper-button on-tap="_submitForm" raised>Check</paper-button>
+          <paper-button on-tap="_submitCheckUpload" raised>Check</paper-button>
         </td>
       </tr>
     </table>
-    <div>TODO(robert): Duplicates shown here...</div>
-    <paper-button on-tap="_upload" raised>Upload</paper-button>
+    <paper-listbox multi selected-values="{{uploadReq.ignore}}">
+      <template is="dom-repeat" items="[[checkUploadResp.duplicates]]">
+        <paper-item>[[item.postDate]] - [[item.displayName]] - [[item.amount]]</paper-item>
+      </template>
+    </paper-listbox>
+    <paper-button on-tap="_submitCreateUpload" raised>Upload</paper-button>
     <iron-ajax
         id="createUploadAjax"
         url="http://localhost:8080/svc/uploads"
         method="POST"
-        body="[[createUploadReq]]"
+        body="[[uploadReq]]"
         content-type="application/x-www-form-urlencoded"
         handle-as="json"
         last-response="{{createUploadResp}}"></iron-ajax>
@@ -79,29 +83,27 @@
       static get is() { return 'pluot-upload'; }
       static get properties() {
         return {
-          checkUploadReq: {
-            type: Object,
-            value: {
-              source: "chase",
-              csv: "",
-              start: "2010-01-01",
-              end: "2010-01-01"
-            }
-          },
-          createUploadReq: {
+          uploadReq: {
             type: Object,
             value: {
               source: "chase",
               csv: "",
               start: "2010-01-01",
               end: "2010-01-01",
-              ignore: ""
+              ignore: []
             }
+          },
+          checkUploadResp: {
+            type: Object,
+            value: { duplicates: [] }
           }
         };
       }
-      _submitForm() {
-        this.$.checkUploadAjax.generateRequest();
+      _onStartChange(evt) {
+        this.set('uploadReq.start', evt.target.value);
+      }
+      _onEndChange(evt) {
+        this.set('uploadReq.end', evt.target.value);
       }
       _onCsvChange(evt) {
         var files = evt.target.files;
@@ -113,15 +115,14 @@
         r.readAsText(files[0]);
       }
       _onCsvLoaded(r) {
-        this.checkUploadReq.csv = r.result;
+        this.set('uploadReq.csv', r.result);
       }
-      _upload() {
-        this.createUploadReq.source = this.checkUploadReq.source;
-        this.createUploadReq.csv = this.checkUploadReq.csv;
-        this.createUploadReq.start = this.checkUploadReq.start;
-        this.createUploadReq.end = this.checkUploadReq.end;
+      _submitCheckUpload() {
+        this.$.checkUploadAjax.generateRequest();
+      }
+      _submitCreateUpload() {
         // TODO(robert): Get value from UI.
-        this.createUploadReq.ignore = "";
+        this.uploadReq.ignore = "";
         this.$.createUploadAjax.generateRequest();
       }
     }

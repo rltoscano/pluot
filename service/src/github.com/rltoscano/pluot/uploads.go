@@ -2,6 +2,7 @@ package pluot
 
 import (
 	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -37,6 +38,15 @@ type UploadDuplicate struct {
 	Amount      int64     `json:"amount"`
 }
 
+// UploadRequest represents both a CheckUpload and CreateUpload request.
+type UploadRequest struct {
+	Source string `json:"source"`
+	CSV    string `json:"csv"`
+	Start  string `json:"start"`
+	End    string `json:"end"`
+	Ignore []int  `json:"ignore"`
+}
+
 // CheckUploadResponse represents the response to a CheckUpload request.
 type CheckUploadResponse struct {
 	Duplicates []UploadDuplicate `json:"duplicates"`
@@ -44,39 +54,40 @@ type CheckUploadResponse struct {
 
 func checkUpload(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
 	// Parse and validate input.
-	err := r.ParseForm()
-	if err != nil {
-		return nil, err
+	req := UploadRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: err.Error()}
 	}
-	if len(r.Form["source"]) == 0 {
+	if req.Source == "" {
 		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `source` parameter"}
 	}
-	if len(r.Form["csv"]) == 0 {
+	if req.CSV == "" {
 		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `csv` parameter"}
 	}
-	if len(r.Form["start"]) == 0 {
+	if req.Start == "" {
 		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `start` parameter"}
 	}
-	if len(r.Form["end"]) == 0 {
+	if req.End == "" {
 		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `end` parameter"}
 	}
-	uploadedTxns, err := parseTxns(r.Form["csv"][0], r.Form["source"][0])
+	uploadedTxns, err := parseTxns(req.CSV, req.Source)
 	if err != nil {
 		return nil, err
 	}
-	start, err := time.Parse("2006-01-02", r.Form["start"][0])
+	start, err := time.Parse("2006-01-02", req.Start)
 	if err != nil {
 		return nil, err
 	}
-	end, err := time.Parse("2006-01-02", r.Form["end"][0])
+	end, err := time.Parse("2006-01-02", req.End)
 	if err != nil {
 		return nil, err
 	}
 
 	// Load existing transactions.
+	log.Debugf(c, "start %v, end %v", start, end)
 	q := datastore.NewQuery("Txn").
 		Filter("PostDate <", end).
-		Filter("PostDate >", start)
+		Filter("PostDate >=", start)
 	existingTxns := []Txn{}
 	keys, err := q.GetAll(c, &existingTxns)
 	if err != nil {
@@ -108,47 +119,55 @@ func checkUpload(c context.Context, r *http.Request, u *user.User) (interface{},
 }
 
 func createUpload(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
-	err := r.ParseForm()
-	if err != nil {
-		return nil, err
+	req := UploadRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: err.Error()}
 	}
-	if len(r.Form["source"]) == 0 {
+	if req.Source == "" {
 		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `source` parameter"}
 	}
-	if len(r.Form["csv"]) == 0 {
+	if req.CSV == "" {
 		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `csv` parameter"}
 	}
-	if len(r.Form["start"]) == 0 {
+	if req.Start == "" {
 		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `start` parameter"}
 	}
-	if len(r.Form["end"]) == 0 {
+	if req.End == "" {
 		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `end` parameter"}
 	}
-	if len(r.Form["ignore"]) == 0 {
-		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `ignore` parameter"}
-	}
-	sourceName := r.Form["source"][0]
-	uploadedTxns, err := parseTxns(r.Form["csv"][0], sourceName)
+	uploadedTxns, err := parseTxns(req.CSV, req.Source)
 	if err != nil {
 		return nil, err
 	}
-	start, err := time.Parse("2006-01-02", r.Form["start"][0])
+	start, err := time.Parse("2006-01-02", req.Start)
 	if err != nil {
 		return nil, err
 	}
-	end, err := time.Parse("2006-01-02", r.Form["end"][0])
+	end, err := time.Parse("2006-01-02", req.End)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO(robert): Filter out duplicates.
-	// ignore := r.Form["ignore"][0]
-	filteredTxns := uploadedTxns
+	// Filter out duplicates.
+	filteredTxns := make([]Txn, 0, len(uploadedTxns))
+	for i, t := range uploadedTxns {
+		skip := false
+		for _, ignore := range req.Ignore {
+			if i == ignore {
+				skip = true
+				break
+			}
+		}
+		if !skip {
+			filteredTxns = append(filteredTxns, t)
+		}
+	}
 
 	// Record upload event.
 	// TODO(robert): Make this part of a transaction with above mutation.
+	// TODO(robert): Add user support.
 	createUploadResp := UploadEvent{
-		Source:    sourceName,
+		Source:    req.Source,
 		User:      "testing",
 		Count:     len(filteredTxns),
 		EventTime: time.Now(),
