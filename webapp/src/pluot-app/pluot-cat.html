@@ -1,6 +1,5 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
-<link rel="import" href="../../bower_components/neon-animation/web-animations.html">
 <link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
@@ -31,8 +30,12 @@
       static get is() { return 'pluot-cat'; }
       static get properties() {
         return {
-          txn: { type: Object, observer: '_onTxnChange' },
-          cat: { type: Number, value: 0, observer: '_onCatChange' },
+          txn: {
+            type: Object,
+            value: {id: 0, category: 0, userCategory: 0},
+            observer: '_onTxnChange'
+          },
+          cat: { type: String, value: "", observer: '_onCatChange' },
           patchReq: {
             type: Object,
             value: { txn: { userCategory: 0 }, fields: [ "userCategory" ] }
@@ -40,17 +43,21 @@
         };
       }
       _onTxnChange(newValue, oldValue) {
-        if (newValue.userCategory > 0) {
-          this.cat = newValue.userCategory;
+        if (newValue.id == 0) {
           return;
         }
-        this.cat = newValue.category;
+        if (newValue.userCategory > 0) {
+          this.set('cat', String(newValue.userCategory));
+          return;
+        }
+        this.set('cat', String(newValue.category));
       }
       _onCatChange(newValue, oldValue) {
-        this.patchReq.txn.userCategory = Number(newValue);
-        if (typeof oldValue != 'undefined') {
-          this.$.patchTxnAjax.generateRequest();
+        if (newValue == "" || oldValue == "" || newValue == "0" || oldValue == "0") {
+          return;
         }
+        this.patchReq.txn.userCategory = Number(newValue);
+        this.$.patchTxnAjax.generateRequest();
       }
     }
     window.customElements.define(PluotCat.is, PluotCat);

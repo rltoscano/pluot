@@ -228,6 +228,7 @@ func parseChase(csvRows [][]string) ([]Txn, error) {
 			PostDate:            postDate,
 			OriginalDisplayName: row[3],
 			Amount:              int64(f * 100),
+			Category:            CategoryUncategorized,
 		})
 	}
 	return txns, nil
