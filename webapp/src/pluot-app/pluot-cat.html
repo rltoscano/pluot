@@ -7,24 +7,50 @@
 
 <dom-module id="pluot-cat">
   <template>
-    <paper-dropdown-menu label="Category" no-label-float layered>
-      <paper-listbox slot="dropdown-content" selected="{{cat}}">
-        <paper-item>Uncategorized</paper-item>
-        <paper-item>Entertainment</paper-item>
-        <paper-item>Eating Out</paper-item>
-        <paper-item>Groceries</paper-item>
-        <paper-item>Shopping</paper-item>
-        <paper-item>Health</paper-item>
+    <paper-dropdown-menu label="Category" no-label-float>
+      <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{cat}}">
+        <paper-item code="1">Uncategorized</paper-item>
+        <paper-item code="2">Entertainment</paper-item>
+        <paper-item code="3">Eating Out</paper-item>
+        <paper-item code="4">Groceries</paper-item>
+        <paper-item code="5">Shopping</paper-item>
+        <paper-item code="6">Health</paper-item>
       </paper-listbox>
     </paper-dropdown-menu>
+    <iron-ajax
+        id="patchTxnAjax"
+        url="http://localhost:8080/svc/txns/[[txn.id]]"
+        method="PATCH"
+        content-type="application/json"
+        body="[[patchReq]]"
+        handle-as="json"
+        last-response="{{patchResp}}"></iron-ajax>
   </template>
   <script>
     class PluotCat extends Polymer.Element {
       static get is() { return 'pluot-cat'; }
       static get properties() {
         return {
-          cat: { type: Number, notify: true, value: 1, reflectToAttribute: true }
+          txn: { type: Object, observer: '_onTxnChange' },
+          cat: { type: Number, value: 0, observer: '_onCatChange' },
+          patchReq: {
+            type: Object,
+            value: { txn: { userCategory: 0 }, fields: [ "userCategory" ] }
+          }
         };
+      }
+      _onTxnChange(newValue, oldValue) {
+        if (newValue.userCategory > 0) {
+          this.cat = newValue.userCategory;
+          return;
+        }
+        this.cat = newValue.category;
+      }
+      _onCatChange(newValue, oldValue) {
+        this.patchReq.txn.userCategory = Number(newValue);
+        if (typeof oldValue != 'undefined') {
+          this.$.patchTxnAjax.generateRequest();
+        }
       }
     }
     window.customElements.define(PluotCat.is, PluotCat);

@@ -19,6 +19,11 @@ func init() {
 			AllowedOrigin: "http://localhost:8081",
 		},
 		{
+			URL:           "/svc/txns/",
+			Methods:       map[string]pihen.RESTMethod{http.MethodPatch: patchTxn},
+			AllowedOrigin: "http://localhost:8081",
+		},
+		{
 			URL:           "/svc/uploads",
 			Methods:       map[string]pihen.RESTMethod{http.MethodPost: createUpload},
 			AllowedOrigin: "http://localhost:8081",

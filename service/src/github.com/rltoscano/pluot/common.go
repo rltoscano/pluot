@@ -4,12 +4,13 @@ import "time"
 
 // Transaction categories. Don't renumber these. Next: 6.
 const (
-	CategoryUncategorized = 0
-	CategoryEntertainment = 1
-	CategoryEatingOut     = 2
-	CategoryGroceries     = 3
-	CategoryShopping      = 4
-	CategoryHealth        = 5
+	CategoryUnknown       = 0
+	CategoryUncategorized = 1
+	CategoryEntertainment = 2
+	CategoryEatingOut     = 3
+	CategoryGroceries     = 4
+	CategoryShopping      = 5
+	CategoryHealth        = 6
 )
 
 // Upload sources.
