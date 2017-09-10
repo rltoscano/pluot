@@ -14,8 +14,11 @@ import (
 func init() {
 	collections := []pihen.Collection{
 		{
-			URL:           "/svc/txns",
-			Methods:       map[string]pihen.Method{http.MethodGet: listTxns},
+			URL: "/svc/txns",
+			Methods: map[string]pihen.Method{
+				http.MethodGet:   listTxns,
+				http.MethodPatch: patchTxns,
+			},
 			AllowedOrigin: "http://localhost:8081",
 		},
 		{

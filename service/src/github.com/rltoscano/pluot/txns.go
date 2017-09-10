@@ -26,6 +26,13 @@ type PatchTxnRequest struct {
 	Fields []string `json:"fields"`
 }
 
+// PatchTxnsRequest patches multiple transactions.
+type PatchTxnsRequest struct {
+	IDs    []int64  `json:"ids"`
+	Txn    Txn      `json:"txn"`
+	Fields []string `json:"fields"`
+}
+
 // listTxns lists the transactions in the database.
 func listTxns(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
 	txns, err := loadTxns(c, time.Time{}, time.Time{}, CategoryUnknown)
@@ -57,6 +64,39 @@ func patchTxn(c context.Context, r *http.Request, u *user.User) (interface{}, er
 		return err
 	}, nil)
 	return *t, err
+}
+
+func patchTxns(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
+	// Parse ID out of URL.
+	req := PatchTxnsRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, pihen.Error{http.StatusBadRequest, err.Error()}
+	}
+	if len(req.IDs) == 0 || len(req.Fields) == 0 {
+		return nil, pihen.Error{http.StatusBadRequest, "no input specified"}
+	}
+	txns := make([]Txn, len(req.IDs))
+	keys := make([]*datastore.Key, len(req.IDs))
+	for i, id := range req.IDs {
+		keys[i] = datastore.NewKey(c, "Txn", "", id, nil)
+	}
+	err := datastore.RunInTransaction(c, func(tc context.Context) error {
+		err := datastore.GetMulti(c, keys, txns)
+		if err != nil {
+			return err
+		}
+		for i := range txns {
+			if err = applyFields(&req.Txn, &txns[i], req.Fields); err != nil {
+				return err
+			}
+		}
+		_, err = datastore.PutMulti(c, keys, txns)
+		return err
+	}, nil)
+	for i, k := range keys {
+		txns[i].ID = k.IntID()
+	}
+	return txns, err
 }
 
 func applyFields(source, dest *Txn, fields []string) error {
