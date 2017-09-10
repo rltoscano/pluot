@@ -3,6 +3,7 @@
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-form/iron-form.html">
+<link rel="import" href="../../bower_components/iron-input/iron-input.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
@@ -16,6 +17,9 @@
       }
       td {
         padding: 8px;
+      }
+      dupDate {
+        width: 300px;
       }
     </style>
     <iron-ajax
@@ -31,7 +35,7 @@
       <tr>
         <td colspan="2">
           <paper-dropdown-menu label="Source">
-            <paper-listbox attr-for-selected="source" slot="dropdown-content" selected="{{checkUploadReq.source}}">
+            <paper-listbox attr-for-selected="source" slot="dropdown-content" selected="{{source}}">
               <paper-item source="chase">Chase</paper-item>
               <paper-item source="wellsfargo">Wellsfargo</paper-item>
             </paper-listbox>
@@ -50,11 +54,11 @@
       </tr>
       <tr>
         <td>Start</td>
-        <td><input id="start" type="date" on-change="_onStartChange"/></td>
+        <td><iron-input bind-value="{{start}}"><input type="date"/></iron-input></td>
       </tr>
       <tr>
         <td>End (exclusive)</td>
-        <td><input id="end" type="date" on-change="_onEndChange"/></td>
+        <td><iron-input bind-value="{{end}}"><input type="date"/></iron-input></td>
       </tr>
       <tr>
         <td colspan="2">
@@ -62,9 +66,13 @@
         </td>
       </tr>
     </table>
-    <paper-listbox multi>
+    <paper-listbox multi selected-values="{{ignore}}">
       <template is="dom-repeat" items="[[checkUploadResp.duplicates]]">
-        <paper-item>[[item.postDate]] - [[item.displayName]] - [[item.amount]]</paper-item>
+        <paper-item value="[[item.uploadIdx]]">
+          <span class="dupDate">[[item.postDate]]</span>
+          <span class="dupDisplayName" flex>[[item.displayName]]</span>
+          <span class="dupAmount">[[item.amount]]</span>
+        </paper-item>
       </template>
     </paper-listbox>
     <paper-button on-tap="_submitCreateUpload" raised>Upload</paper-button>
@@ -83,27 +91,25 @@
       static get is() { return 'pluot-upload'; }
       static get properties() {
         return {
+          source: { type: String, value: "" },
+          csv: { type: String, value: "" },
+          start: { type: String, value: "" },
+          end: { type: String, value: "" },
+          ignore: { type: Array, value: [] },
           uploadReq: {
             type: Object,
-            value: {
-              source: "chase",
-              csv: "",
-              start: "2010-01-01",
-              end: "2010-01-01",
-              ignore: [],
-            }
+            computed: '_computeUploadReq(source, csv, start, end, ignore)',
           },
-          checkUploadResp: {
-            type: Object,
-            value: { duplicates: [] }
-          }
         };
       }
-      _onStartChange(evt) {
-        this.set('uploadReq.start', evt.target.value);
-      }
-      _onEndChange(evt) {
-        this.set('uploadReq.end', evt.target.value);
+      _computeUploadReq(source, csv, start, end, ignore) {
+        return {
+          source: source,
+          csv: csv,
+          start: start,
+          end: end,
+          ignore: ignore,
+        };
       }
       _onCsvChange(evt) {
         var files = evt.target.files;
@@ -115,14 +121,12 @@
         r.readAsText(files[0]);
       }
       _onCsvLoaded(r) {
-        this.set('uploadReq.csv', r.result);
+        this.csv = r.result;
       }
       _submitCheckUpload() {
         this.$.checkUploadAjax.generateRequest();
       }
       _submitCreateUpload() {
-        // TODO(robert): Get value from UI.
-        this.uploadReq.ignore = [];
         this.$.createUploadAjax.generateRequest();
       }
     }
