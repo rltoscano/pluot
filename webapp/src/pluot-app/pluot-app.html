@@ -14,7 +14,10 @@
 <link rel="import" href="../../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
 
 <dom-module id="pluot-app">
@@ -57,6 +60,7 @@
         <paper-listbox selected="{{appview}}">
           <paper-item>Transactions</paper-item>
           <paper-item>Upload</paper-item>
+          <paper-item>Rules</paper-item>
         </paper-listbox>
       </app-drawer>
 
@@ -75,6 +79,29 @@
             </template>
           </iron-list>
           <pluot-upload></pluot-upload>
+          <div fullbleed>
+            <div>
+              <paper-input label="regexp" value="{{newRuleRegexp}}"></paper-input>
+              <paper-dropdown-menu>
+                <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{newRuleCategoryStr}}">
+                  <paper-item code="1">Uncategorized</paper-item>
+                  <paper-item code="2">Entertainment</paper-item>
+                  <paper-item code="3">Eating Out</paper-item>
+                  <paper-item code="4">Groceries</paper-item>
+                  <paper-item code="5">Shopping</paper-item>
+                  <paper-item code="6">Health</paper-item>
+                </paper-listbox>
+              </paper-dropdown-menu>
+              <paper-icon-button icon="plus" on-tap="_onCreateRule">Create</paper-icon-button>
+            </div>
+            <paper-listbox fullbleed>
+              <template is="dom-repeat" items="[[listRulesResp.rules]]" as="rule">
+                <paper-item>
+                  <span>[[rule.regexp]]</span><span>[[rule.category]]</span>
+                </paper-item>
+              </template>
+            </paper-listbox>
+          </div>
         </iron-pages>
 
       </app-header-layout>
@@ -87,19 +114,40 @@
         handle-as="json"
         last-response="{{txnList}}"></iron-ajax>
 
+    <iron-ajax
+        auto
+        url="http://localhost:8080/svc/rules"
+        handle-as="json"
+        last-response="{{listRulesResp}}"></iron-ajax>
+
+    <iron-ajax
+        id="createRuleAjax"
+        url="http://localhost:8080/svc/rules"
+        method="POST"
+        content-type="application/json"
+        body="[[createRuleReq]]"
+        handle-as="json"
+        last-response="{{createRuleResp}}"></iron-ajax>
+
   </template>
 
   <script>
-    /**
-     * @customElement
-     * @polymer
-     */
     class PluotApp extends Polymer.Element {
       static get is() { return 'pluot-app'; }
       static get properties() {
         return {
-          appview: { type: Number, value: 0 }
+          appview: { type: Number, value: 2 },
+          createRuleReq: {
+            type: Object,
+            computed: '_computeCreateRuleReq(newRuleRegexp, newRuleCategoryStr)',
+          },
         };
+      }
+      _computeCreateRuleReq(newRuleRegexp, newRuleCategoryStr) {
+        return { regexp: newRuleRegexp, category: parseInt(newRuleCategoryStr) };
+      }
+      _onCreateRule() {
+        this.$.createRuleAjax.generateRequest();
       }
     }
 

@@ -45,6 +45,12 @@ func createRule(c context.Context, r *http.Request, u *user.User) (interface{}, 
 	if err := json.NewDecoder(r.Body).Decode(&rule); err != nil {
 		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: err.Error()}
 	}
+	if rule.Regexp == "" {
+		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "missing `regexp` parameter"}
+	}
+	if rule.Category == 0 {
+		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "invalid `category`"}
+	}
 	k, err := datastore.Put(c, datastore.NewIncompleteKey(c, "Rule", nil), &rule)
 	if err != nil {
 		return nil, err

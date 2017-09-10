@@ -62,7 +62,7 @@
         </td>
       </tr>
     </table>
-    <paper-listbox multi selected-values="{{uploadReq.ignore}}">
+    <paper-listbox multi>
       <template is="dom-repeat" items="[[checkUploadResp.duplicates]]">
         <paper-item>[[item.postDate]] - [[item.displayName]] - [[item.amount]]</paper-item>
       </template>
@@ -73,7 +73,7 @@
         url="http://localhost:8080/svc/uploads"
         method="POST"
         body="[[uploadReq]]"
-        content-type="application/x-www-form-urlencoded"
+        content-type="application/json"
         handle-as="json"
         last-response="{{createUploadResp}}"></iron-ajax>
 
@@ -90,7 +90,7 @@
               csv: "",
               start: "2010-01-01",
               end: "2010-01-01",
-              ignore: []
+              ignore: [],
             }
           },
           checkUploadResp: {
@@ -122,7 +122,7 @@
       }
       _submitCreateUpload() {
         // TODO(robert): Get value from UI.
-        this.uploadReq.ignore = "";
+        this.uploadReq.ignore = [];
         this.$.createUploadAjax.generateRequest();
       }
     }
