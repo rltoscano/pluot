@@ -51,6 +51,7 @@ func createRule(c context.Context, r *http.Request, u *user.User) (interface{}, 
 	if rule.Category == 0 {
 		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: "invalid `category`"}
 	}
+	rule.Created = time.Now()
 	k, err := datastore.Put(c, datastore.NewIncompleteKey(c, "Rule", nil), &rule)
 	if err != nil {
 		return nil, err
