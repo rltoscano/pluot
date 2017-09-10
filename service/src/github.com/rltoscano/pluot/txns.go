@@ -41,7 +41,7 @@ func patchTxn(c context.Context, r *http.Request, u *user.User) (interface{}, er
 	}
 	req := PatchTxnRequest{}
 	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: err.Error()}
+		return nil, pihen.Error{http.StatusBadRequest, err.Error()}
 	}
 	t := new(Txn)
 	k := datastore.NewKey(c, "Txn", "", id, nil)
@@ -75,9 +75,9 @@ func applyFields(source, dest *Txn, fields []string) error {
 			dest.Note = source.Note
 			break
 		default:
-			return pihen.RESTErr{
-				Status:  http.StatusBadRequest,
-				Message: fmt.Sprintf("`%s` is not an editable field: `userCategory`, `postDate`, `userDisplayName`, `note` ", f),
+			return pihen.Error{
+				http.StatusBadRequest,
+				fmt.Sprintf("`%s` is not an editable field: `userCategory`, `postDate`, `userDisplayName`, `note` ", f),
 			}
 		}
 	}

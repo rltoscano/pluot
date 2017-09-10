@@ -28,7 +28,7 @@ type ComputeAggregationResponse struct {
 func computeAggregation(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
 	req := ComputeAggregationRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: err.Error()}
+		return nil, pihen.Error{http.StatusBadRequest, err.Error()}
 	}
 	start, err := time.Parse("2006-01-02", req.Start)
 	if err != nil {
