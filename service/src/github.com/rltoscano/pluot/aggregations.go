@@ -14,9 +14,9 @@ import (
 // ComputeAggregationRequest is a JSON request for the ComputeAggregation
 // method.
 type ComputeAggregationRequest struct {
-	Start    time.Time `json:"start"`
-	End      time.Time `json:"end"`
-	Category int       `json:"category"`
+	Start    string `json:"start"`
+	End      string `json:"end"`
+	Category int    `json:"category"`
 }
 
 // ComputeAggregationResponse contains the total and average aggregations.
@@ -30,7 +30,15 @@ func computeAggregation(c context.Context, r *http.Request, u *user.User) (inter
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, pihen.RESTErr{Status: http.StatusBadRequest, Message: err.Error()}
 	}
-	txns, err := loadTxns(c, req.Start, req.End, req.Category)
+	start, err := time.Parse("2006-01-02", req.Start)
+	if err != nil {
+		return nil, err
+	}
+	end, err := time.Parse("2006-01-02", req.End)
+	if err != nil {
+		return nil, err
+	}
+	txns, err := loadTxns(c, start, end, req.Category)
 	if err != nil {
 		return nil, err
 	}
@@ -38,6 +46,8 @@ func computeAggregation(c context.Context, r *http.Request, u *user.User) (inter
 	for _, t := range txns {
 		resp.Total = resp.Total + t.Amount
 	}
-	resp.Average = resp.Total / int64(len(txns))
+	if len(txns) > 0 {
+		resp.Average = resp.Total / int64(len(txns))
+	}
 	return resp, nil
 }

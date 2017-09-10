@@ -1,0 +1,66 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+
+<dom-module id="pluot-agg">
+  <template>
+    <style include="iron-flex iron-flex-alignment">
+    </style>
+    <div>
+      <div><paper-input value="{{start}}" label="Start e.g. 2017-03-01"/></div>
+      <div><paper-input value="{{end}}" label="End e.g. 2017-04-01"/></div>
+      <div>
+        <paper-dropdown-menu>
+          <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{cat}}">
+            <paper-item code="1">Uncategorized</paper-item>
+            <paper-item code="2">Entertainment</paper-item>
+            <paper-item code="3">Eating Out</paper-item>
+            <paper-item code="4">Groceries</paper-item>
+            <paper-item code="5">Shopping</paper-item>
+            <paper-item code="6">Health</paper-item>
+          </paper-listbox>
+        </paper-dropdown-menu>
+      </div>
+      <table>
+        <tr><td>Total</td><td>[[_formatAmount(computeAggResp.total)]]</td></tr>
+        <tr><td>Average</td><td>[[_formatAmount(computeAggResp.average)]]</td></tr>
+      </table>
+      <iron-ajax
+          id="computeAggAjax"
+          url="http://localhost:8080/svc/aggs"
+          auto
+          method="POST"
+          content-type="application/json"
+          body="[[computeAggReq]]"
+          handle-as="json"
+          last-response="{{computeAggResp}}"
+          debounce-duration="1000"></iron-ajax>
+    </div>
+  </template>
+  <script>
+    class PluotAgg extends Polymer.Element {
+      static get is() { return 'pluot-agg'; }
+      static get properties() {
+        return {
+          computeAggReq: {
+            type: Object,
+            computed: '_computeComputeAggReq(start, end, cat)'
+          },
+        };
+      }
+      _computeComputeAggReq(start, end, cat) {
+        return { start: start, end: end, category: parseInt(cat) };
+      }
+      _formatAmount(amount) {
+        var amountStr = String(amount);
+        return "$" + amountStr.substr(0, amountStr.length-2) + "." + amountStr.substr(-2);
+      }
+    }
+    window.customElements.define(PluotAgg.is, PluotAgg);
+  </script>
+
+</dom-module>

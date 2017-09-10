@@ -2,6 +2,7 @@
 
 <link rel="import" href="pluot-txn.html">
 <link rel="import" href="pluot-upload.html">
+<link rel="import" href="pluot-agg.html">
 
 <link rel="import" href="../../bower_components/app-layout/app-drawer/app-drawer.html">
 <link rel="import" href="../../bower_components/app-layout/app-drawer-layout/app-drawer-layout.html">
@@ -61,6 +62,7 @@
           <paper-item>Transactions</paper-item>
           <paper-item>Upload</paper-item>
           <paper-item>Rules</paper-item>
+          <paper-item>Aggregations</paper-item>
         </paper-listbox>
       </app-drawer>
 
@@ -102,6 +104,7 @@
               </template>
             </paper-listbox>
           </div>
+          <pluot-agg></pluot-agg>
         </iron-pages>
 
       </app-header-layout>
@@ -136,7 +139,7 @@
       static get is() { return 'pluot-app'; }
       static get properties() {
         return {
-          appview: { type: Number, value: 2 },
+          appview: { type: Number, value: 3 },
           createRuleReq: {
             type: Object,
             computed: '_computeCreateRuleReq(newRuleRegexp, newRuleCategoryStr)',

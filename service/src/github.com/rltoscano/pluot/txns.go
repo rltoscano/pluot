@@ -75,7 +75,10 @@ func applyFields(source, dest *Txn, fields []string) error {
 			dest.Note = source.Note
 			break
 		default:
-			return pihen.RESTErr{Status: http.StatusBadRequest, Message: fmt.Sprintf("`%s` is not an editable field: `userCategory`, `postDate`, `userDisplayName`, `note` ", f)}
+			return pihen.RESTErr{
+				Status:  http.StatusBadRequest,
+				Message: fmt.Sprintf("`%s` is not an editable field: `userCategory`, `postDate`, `userDisplayName`, `note` ", f),
+			}
 		}
 	}
 	return nil
@@ -84,9 +87,6 @@ func applyFields(source, dest *Txn, fields []string) error {
 // Returns transactions in reverse-chronological order. `end` is exclusive.
 func loadTxns(c context.Context, start, end time.Time, cat int) ([]Txn, error) {
 	q := datastore.NewQuery("Txn")
-	if cat > 0 {
-		q = q.Filter("Category =", cat)
-	}
 	if !start.IsZero() {
 		q = q.Filter("PostDate >= ", start)
 	}
@@ -101,6 +101,19 @@ func loadTxns(c context.Context, start, end time.Time, cat int) ([]Txn, error) {
 	}
 	for i, k := range keys {
 		txns[i].ID = k.IntID()
+	}
+	if cat > 0 {
+		filtered := make([]Txn, 0, len(txns))
+		for _, t := range txns {
+			if t.UserCategory > 0 && t.UserCategory != cat {
+				continue
+			}
+			if t.UserCategory == 0 && t.Category != cat {
+				continue
+			}
+			filtered = append(filtered, t)
+		}
+		txns = filtered
 	}
 	return txns, nil
 }

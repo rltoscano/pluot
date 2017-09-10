@@ -48,7 +48,7 @@ func init() {
 		},
 		{
 			URL:           "/svc/aggs",
-			Methods:       map[string]pihen.RESTMethod{http.MethodGet: computeAggregation},
+			Methods:       map[string]pihen.RESTMethod{http.MethodPost: computeAggregation},
 			AllowedOrigin: "http://localhost:8081",
 		},
 	}
