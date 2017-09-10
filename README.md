@@ -27,11 +27,12 @@ Properties
 ## UploadEvent
 
 Properties
-- id - string
-- event_time - Timestamp
-- user - string
-- source - string
-
+- `id` - string
+- `event_time` - Timestamp
+- `user` - string
+- `source` - string
+- `start` - Timestamp
+- `end` - Timestamp
 
 # Processes
 
@@ -50,6 +51,18 @@ Properties
 Parameters
 - csv_data - Text of the CSV file.
 - parser - How to interpret the data.
+
+## ComputeAggregation
+Calculates aggregations for a time-bound filtered list of transactions.
+
+Parameters
+- `start` - Timestamp
+- `end` - Timestamp
+- `category` - integer
+
+Results
+- `avg` - integer
+- `total` - integer
 
 # UI
 

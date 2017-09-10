@@ -22,13 +22,13 @@ const (
 // Txn represents a financial transaction.
 type Txn struct {
 	ID                  int64     `datastore:"-" json:"id"`
-	PostDate            time.Time `datestore:"post_date" json:"postDate"`
-	Amount              int64     `datastore:"amount,noindex" json:"amount"`
-	OriginalDisplayName string    `datastore:"original_display_name" json:"originalDisplayName"`
-	DisplayName         string    `datastore:"display_name" json:"displayName"`
-	UserDisplayName     string    `datastore:"user_display_name" json:"userDisplayName"`
-	Note                string    `datastore:"note" json:"note"`
-	Category            int       `datastore:"category" json:"category"`
-	UserCategory        int       `datastore:"user_category" json:"userCategory"`
-	UploadID            int64     `datastore:"upload_id" json:"uploadId"`
+	PostDate            time.Time `json:"postDate"`
+	Amount              int64     `datastore:"Amount,noindex" json:"amount"`
+	OriginalDisplayName string    `json:"originalDisplayName"`
+	DisplayName         string    `json:"displayName"`
+	UserDisplayName     string    `json:"userDisplayName"`
+	Note                string    `json:"note"`
+	Category            int       `json:"category"`
+	UserCategory        int       `json:"userCategory"`
+	UploadID            int64     `json:"uploadId"`
 }

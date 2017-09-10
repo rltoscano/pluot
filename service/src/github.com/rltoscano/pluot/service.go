@@ -46,6 +46,11 @@ func init() {
 			Methods:       map[string]pihen.RESTMethod{http.MethodDelete: deleteRule},
 			AllowedOrigin: "http://localhost:8081",
 		},
+		{
+			URL:           "/svc/aggs",
+			Methods:       map[string]pihen.RESTMethod{http.MethodGet: computeAggregation},
+			AllowedOrigin: "http://localhost:8081",
+		},
 	}
 	pihen.Bind(collections)
 	http.HandleFunc("/debug", debugHandler)

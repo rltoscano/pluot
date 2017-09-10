@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/rltoscano/pihen"
 
@@ -25,18 +26,10 @@ type PatchTxnRequest struct {
 	Fields []string `json:"fields"`
 }
 
-// ListTxns lists the transactions in the database filtered by the given parameters.
+// listTxns lists the transactions in the database.
 func listTxns(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
-	q := datastore.NewQuery("Txn").Order("-PostDate")
-	var resp ListTxnsResponse
-	keys, err := q.GetAll(c, &resp.Txns)
-	if err != nil {
-		return nil, err
-	}
-	for i, k := range keys {
-		resp.Txns[i].ID = k.IntID()
-	}
-	return resp, nil
+	txns, err := loadTxns(c, time.Time{}, time.Time{}, CategoryUnknown)
+	return ListTxnsResponse{txns}, err
 }
 
 func patchTxn(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
@@ -86,4 +79,28 @@ func applyFields(source, dest *Txn, fields []string) error {
 		}
 	}
 	return nil
+}
+
+// Returns transactions in reverse-chronological order. `end` is exclusive.
+func loadTxns(c context.Context, start, end time.Time, cat int) ([]Txn, error) {
+	q := datastore.NewQuery("Txn")
+	if cat > 0 {
+		q = q.Filter("Category =", cat)
+	}
+	if !start.IsZero() {
+		q = q.Filter("PostDate >= ", start)
+	}
+	if !end.IsZero() {
+		q = q.Filter("PostDate <", end)
+	}
+	q = q.Order("-PostDate")
+	txns := []Txn{}
+	keys, err := q.GetAll(c, &txns)
+	if err != nil {
+		return nil, err
+	}
+	for i, k := range keys {
+		txns[i].ID = k.IntID()
+	}
+	return txns, nil
 }

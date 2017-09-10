@@ -20,12 +20,12 @@ import (
 // UploadEvent represents an transaction upload event.
 type UploadEvent struct {
 	ID        int64     `datastore:"-" json:"id"`
-	Source    string    `datastore:"source" json:"source"`
-	User      string    `datastore:"user" json:"user"`
-	Count     int       `datastore:"count" json:"count"`
-	EventTime time.Time `datastore:"event_time" json:"eventTime"`
-	Start     time.Time `datastore:"start" json:"start"`
-	End       time.Time `datastore:"end" json:"end"`
+	Source    string    `json:"source"`
+	User      string    `json:"user"`
+	Count     int       `json:"count"`
+	EventTime time.Time `json:"eventTime"`
+	Start     time.Time `json:"start"`
+	End       time.Time `json:"end"`
 }
 
 // UploadDuplicate represents a duplication of a transaction observed in an
@@ -84,17 +84,9 @@ func checkUpload(c context.Context, r *http.Request, u *user.User) (interface{},
 	}
 
 	// Load existing transactions.
-	log.Debugf(c, "start %v, end %v", start, end)
-	q := datastore.NewQuery("Txn").
-		Filter("PostDate <", end).
-		Filter("PostDate >=", start)
-	existingTxns := []Txn{}
-	keys, err := q.GetAll(c, &existingTxns)
+	existingTxns, err := loadTxns(c, start, end, CategoryUnknown)
 	if err != nil {
 		return nil, err
-	}
-	for i, k := range keys {
-		existingTxns[i].ID = k.IntID()
 	}
 	log.Debugf(c, "%d transactions loaded", len(existingTxns))
 

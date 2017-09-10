@@ -19,10 +19,10 @@ import (
 // Rule applies a regular expression to a transaction's display name and if
 // it matches, changes the transaction's category.
 type Rule struct {
-	ID       int64     `datastore:"id" json:"id"`
-	Regexp   string    `datastore:"regexp" json:"regexp"`
-	Category int       `datastore:"category" json:"category"`
-	Created  time.Time `datastore:"created" json:"created"`
+	ID       int64     `json:"id"`
+	Regexp   string    `json:"regexp"`
+	Category int       `json:"category"`
+	Created  time.Time `json:"created"`
 }
 
 // Applies returns whether the rule applies to the transaction.
