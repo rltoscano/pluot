@@ -96,7 +96,7 @@ func patchTxns(c context.Context, r *http.Request, u *user.User) (interface{}, e
 	for i, k := range keys {
 		txns[i].ID = k.IntID()
 	}
-	return txns, err
+	return ListTxnsResponse{txns}, err
 }
 
 func applyFields(source, dest *Txn, fields []string) error {
