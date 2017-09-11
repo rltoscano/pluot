@@ -45,6 +45,11 @@ func init() {
 			AllowedOrigin: "http://localhost:8081",
 		},
 		{
+			URL:           "/svc/rules:proposal",
+			Methods:       map[string]pihen.Method{http.MethodGet: listRuleProposals},
+			AllowedOrigin: "http://localhost:8081",
+		},
+		{
 			URL:           "/svc/rules/",
 			Methods:       map[string]pihen.Method{http.MethodDelete: deleteRule},
 			AllowedOrigin: "http://localhost:8081",

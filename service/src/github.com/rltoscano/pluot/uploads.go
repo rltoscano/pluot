@@ -163,7 +163,12 @@ func createUpload(c context.Context, r *http.Request, u *user.User) (interface{}
 	for i, t := range filteredTxns {
 		for _, r := range rules {
 			if r.Applies(c, t) {
-				filteredTxns[i].Category = r.Category
+				if r.DisplayName != "" {
+					filteredTxns[i].DisplayName = r.DisplayName
+				}
+				if r.Category != CategoryUnknown {
+					filteredTxns[i].Category = r.Category
+				}
 				break
 			}
 		}

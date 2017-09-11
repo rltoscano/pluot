@@ -2,16 +2,45 @@
 
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<script src="common.js"></script>
 
 <dom-module id="pluot-rules">
   <template>
-    <div>
-      <paper-input label="regexp" value="{{newRuleRegexp}}"></paper-input>
-      <paper-dropdown-menu>
+    <style include="iron-flex iron-flex-alignment">
+      paper-card {
+        padding: 16px;
+        cursor: pointer;
+      }
+      label {
+        font-family: sans-serif;
+        font-size: 16pt;
+        padding: 16px;
+      }
+      iron-list > div {
+        padding: 16px;
+        margin-right: 16px;
+      }
+      iron-list paper-card {
+        width: 200px;
+        height: 100px;
+      }
+      iron-list paper-card.is-selected-true {
+        background-color: #583759;
+        color: #fff;
+      }
+    </style>
+
+    <paper-dialog id="editDialog" class="layout vertical">
+      <paper-input label="Pattern" value="{{newRulePattern}}"></paper-input>
+      <paper-checkbox checked="{{newRuleRegexp}}">Regexp</paper-checkbox>
+      <paper-dropdown-menu label="Category">
         <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{newRuleCategoryStr}}">
           <paper-item code="1">Uncategorized</paper-item>
           <paper-item code="2">Entertainment</paper-item>
@@ -21,20 +50,51 @@
           <paper-item code="6">Health</paper-item>
         </paper-listbox>
       </paper-dropdown-menu>
-      <paper-button on-tap="_onCreateRule">Create</paper-button>
+      <div class="layout horizontal end-justified">
+        <paper-button dialog-dismiss>Cancel</paper-button>
+        <paper-button dialog-confirm autofocus on-tap="_onCreateRule">Accept</paper-button>
+      </div>
+    </paper-dialog>
+
+    <div class="layout vertical" fullbleed>
+      <label>Proposed Rules</label>
+      <iron-list items="[[listRuleProposalsResp.rules]]" as="rule" grid>
+        <template>
+          <div>
+            <paper-card class="layout vertical"
+                on-tap="_onProposalTap"
+                data-pattern$="[[rule.pattern]]"
+                data-category$="[[rule.category]]">
+              <span>[[rule.pattern]]</span>
+              <span>[[_formatCategory(rule.category)]]</span>
+            </paper-card>
+          </div>
+        </template>
+      </iron-list>
+
+      <label>Rules</label>
+      <iron-list items="[[listRulesResp.rules]]" as="rule" grid selection-enabled="true" selected-item="{{selectedRule}}">
+        <template>
+          <div>
+            <paper-card class$="layout vertical is-selected-[[selected]]">
+              <span>[[rule.pattern]]</span>
+              <span>[[_formatCategory(rule.category)]]</span>
+            </paper-card>
+          </div>
+        </template>
+      </iron-list>
     </div>
-    <paper-listbox fullbleed>
-      <template is="dom-repeat" items="[[listRulesResp.rules]]" as="rule">
-        <paper-item>
-          <span>[[rule.regexp]]</span><span>[[rule.category]]</span>
-        </paper-item>
-      </template>
-    </paper-listbox>
+
     <iron-ajax
         auto
         url="http://localhost:8080/svc/rules"
         handle-as="json"
         last-response="{{listRulesResp}}"></iron-ajax>
+    <iron-ajax
+        auto
+        url="http://localhost:8080/svc/rules:proposal"
+        handle-as="json"
+        last-response="{{listRuleProposalsResp}}"></iron-ajax>
     <iron-ajax
         id="createRuleAjax"
         url="http://localhost:8080/svc/rules"
@@ -42,7 +102,13 @@
         content-type="application/json"
         body="[[createRuleReq]]"
         handle-as="json"
-        last-response="{{createRuleResp}}"></iron-ajax>
+        last-response="{{createRuleResp}}"
+        on-response="_addRule"></iron-ajax>
+    <iron-ajax
+        id="deleteRuleAjax"
+        url="http://localhost:8080/svc/rules/[[selectedRule.id]]"
+        method="DELETE"
+        on-response="_removeRule"></iron-ajax>
   </template>
 
   <script>
@@ -52,15 +118,62 @@
         return {
           createRuleReq: {
             type: Object,
-            computed: '_computeCreateRuleReq(newRuleRegexp, newRuleCategoryStr)',
+            computed: '_computeCreateRuleReq(newRulePattern, newRuleRegexp, newRuleCategoryStr)',
+          },
+          toolbar: {
+            type: Array,
+            notify: true,
+            computed: '_computeToolbar(selectedRule)'
           },
         };
       }
-      _computeCreateRuleReq(newRuleRegexp, newRuleCategoryStr) {
-        return { regexp: newRuleRegexp, category: parseInt(newRuleCategoryStr) };
+      create() {
+        this.newRulePattern = "";
+        this.newRuleCategoryStr = "";
+        this.$.editDialog.open();
+      }
+      delete() {
+        this.$.deleteRuleAjax.generateRequest();
+      }
+      _addRule(evt) {
+        this.push('listRulesResp.rules', evt.target.lastResponse);
+      }
+      _removeRule(evt) {
+        var parts = evt.target.lastRequest.url.split('/');
+        var deletedId = parts[parts.length-1];
+        // Find index of deleted rule.
+        var deleted = -1;
+        for (var i = 0; i < this.listRulesResp.rules.length; i++) {
+          if (this.listRulesResp.rules[i].id == deletedId) {
+            deleted = i;
+            break;
+          }
+        }
+        if (deleted != -1) {
+          this.splice('listRulesResp.rules', deleted, 1);
+        }
+      }
+      _computeCreateRuleReq(newRulePattern, newRuleRegexp, newRuleCategoryStr) {
+        return {
+          pattern: newRulePattern,
+          regexp: newRuleRegexp,
+          category: parseInt(newRuleCategoryStr)
+        };
+      }
+      _computeToolbar(selectedRule) {
+        return [
+          { icon: 'add', handler: 'create' },
+          { icon: 'delete', handler: 'delete', disabled: (selectedRule == null) }
+        ];
       }
       _onCreateRule() {
         this.$.createRuleAjax.generateRequest();
+      }
+      _formatCategory(category) { return formatCategory(category); }
+      _onProposalTap(evt) {
+        this.newRulePattern = evt.currentTarget.dataset.pattern;
+        this.newRuleCategoryStr = evt.currentTarget.dataset.category;
+        this.$.editDialog.open();
       }
     }
 

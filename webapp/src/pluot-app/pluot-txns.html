@@ -131,14 +131,7 @@
         if (txn.userCategory > 0) {
           category = txn.userCategory;
         }
-        switch (category) {
-          case 1: return 'Uncategorized';
-          case 2: return 'Entertainment';
-          case 3: return 'Eating Out';
-          case 4: return 'Groceries';
-          case 5: return 'Shopping';
-          case 6: return 'Health';
-        }
+        return formatCategory(category);
       }
       _formatAmount(amount) {
         return formatAmount(amount);
@@ -147,13 +140,13 @@
         this.$.patchAjax.generateRequest();
       }
       _onSelectedItemsChanged(evt) {
-        this.selectedTxnIds = evt.target.selectedItems.map(t => t.id);
+        this.selectedTxnIds = evt.currentTarget.selectedItems.map(t => t.id);
       }
       _onPatchAjaxResponse(evt) {
         for (var i = 0; i < this.listResp.txns.length; i++) {
-          for (var j = 0; j < evt.target.lastResponse.txns.length; j++) {
-            if (this.listResp.txns[i].id == evt.target.lastResponse.txns[j].id) {
-              this.set('listResp.txns.'+i, evt.target.lastResponse.txns[j]);
+          for (var j = 0; j < evt.currentTarget.lastResponse.txns.length; j++) {
+            if (this.listResp.txns[i].id == evt.currentTarget.lastResponse.txns[j].id) {
+              this.set('listResp.txns.'+i, evt.currentTarget.lastResponse.txns[j]);
             }
           }
         }

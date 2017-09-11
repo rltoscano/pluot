@@ -79,6 +79,13 @@
                   <paper-icon-button disabled="[[item.disabled]]" icon="[[item.icon]]" data-host="txns" handler="[[item.handler]]" on-tap="_onAction"></paper-icon-button>
                 </template>
               </div>
+              <div></div>
+              <div>
+                <template is="dom-repeat" items="[[rulesToolbar]]">
+                  <paper-icon-button disabled="[[item.disabled]]" icon="[[item.icon]]" data-host="rules" handler="[[item.handler]]" on-tap="_onAction"></paper-icon-button>
+                </template>
+              </div>
+              <div></div>
             </iron-pages>
           </app-toolbar>
         </app-header>
@@ -86,7 +93,7 @@
         <iron-pages selected="[[appView]]" fullbleed>
           <pluot-txns id="txns" fullbleed toolbar="{{txnsToolbar}}"></pluot-txns>
           <pluot-upload fullbleed></pluot-upload>
-          <pluot-rules fullbleed></pluot-rules>
+          <pluot-rules id="rules" fullbleed toolbar="{{rulesToolbar}}"></pluot-rules>
           <pluot-agg fullbleed></pluot-agg>
         </iron-pages>
 
@@ -101,7 +108,7 @@
       static get is() { return 'pluot-app'; }
       static get properties() {
         return {
-          appView: { type: Number, value: 0 },
+          appView: { type: Number, value: 2 },
         };
       }
       _onAction(evt) {
