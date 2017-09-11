@@ -1,0 +1,166 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<script src="common.js"></script>
+
+<dom-module id="pluot-txns">
+  <template>
+    <style include="iron-flex iron-flex-alignment">
+      .date {
+        width: 64px;
+      }
+      .category {
+        width: 128px;
+      }
+      iron-list paper-item {
+        border-bottom: 1px black solid;
+      }
+      paper-item > * {
+        padding-left: 16px;
+      }
+      paper-item > *:first-child {
+        padding-left: 0px;
+      }
+      iron-list paper-item.is-selected-true {
+        background-color: #583759;
+        color: #fff;
+      }
+    </style>
+    <iron-list fullbleed items="[[listResp.txns]]" as="txn" multi-selection id="txnList" selection-enabled="true" on-selected-items-changed="_onSelectedItemsChanged">
+      <template>
+        <paper-item class$="layout horizontal is-selected-[[selected]]">
+          <div class="date">[[_formateDate(txn.postDate)]]</div>
+          <div class="displayName flex">[[txn.originalDisplayName]]</div>
+          <div class="amount">[[_formatAmount(txn.amount)]]</div>
+          <div class="category">[[_formatCategory(txn)]]</div>
+        </paper-item>
+      </template>
+    </iron-list>
+
+    <paper-dialog id="editDialog" class="layout vertical">
+      <span>[[selectedTxnIds.length]] transactions selected.</span>
+      <paper-input label="Description" value="{{editDisplayName}}"></paper-input>
+      <paper-dropdown-menu label="Category">
+        <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{editCategory}}">
+          <paper-item code="1">Uncategorized</paper-item>
+          <paper-item code="2">Entertainment</paper-item>
+          <paper-item code="3">Eating Out</paper-item>
+          <paper-item code="4">Groceries</paper-item>
+          <paper-item code="5">Shopping</paper-item>
+          <paper-item code="6">Health</paper-item>
+        </paper-listbox>
+      </paper-dropdown-menu>
+      <div class="layout horizontal end-justified">
+        <paper-button dialog-dismiss>Cancel</paper-button>
+        <paper-button dialog-confirm autofocus on-tap="_submitPatchReq">Accept</paper-button>
+      </div>
+    </paper-dialog>
+
+    <iron-ajax
+        auto
+        url="http://localhost:8080/svc/txns"
+        handle-as="json"
+        last-response="{{listResp}}"></iron-ajax>
+    <iron-ajax
+        id="patchAjax"
+        url="http://localhost:8080/svc/txns"
+        method="PATCH"
+        content-type="application/json"
+        body="[[patchReq]]"
+        handle-as="json"
+        last-response="{{patchResp}}"
+        on-response="_onPatchAjaxResponse"></iron-ajax>
+  </template>
+  <script>
+    class PluotTxns extends Polymer.Element {
+      static get is() { return 'pluot-txns'; }
+      static get properties() {
+        return {
+          toolbar: {
+            type: Array,
+            notify: true,
+            computed: '_computeToolbar(selectedTxnIds)'
+          },
+          patchReq: {
+            type: Object,
+            computed: '_computePatchReq(selectedTxnIds, editDisplayName, editCategory)'
+          },
+          selectedTxnIds: { type: Array, value: [] },
+        };
+      }
+      edit() {
+        this.$.editDialog.open();
+      }
+      search() {
+        alert('not ready yet');
+      }
+      _computeToolbar(selectedTxnIds) {
+        return [
+          { icon: 'image:edit', handler: 'edit', disabled: (selectedTxnIds.length == 0) },
+          { icon: 'search', handler: 'search' },
+        ];
+      }
+      _computePatchReq(selectedTxnIds, editDisplayName, editCategory) {
+        var fields = [];
+        if (typeof(editDisplayName) != 'undefined' && editDisplayName != '') {
+          fields.push('userDisplayName');
+        }
+        if (editCategory > 0) {
+          fields.push('userCategory');
+          editCategory = parseInt(editCategory);
+        }
+        return {
+          ids: selectedTxnIds,
+          txn: { userDisplayName: editDisplayName, userCategory: editCategory },
+          fields: fields,
+        };
+      }
+      _formateDate(str) {
+        var d = new Date(Date.parse(str));
+        return d.toLocaleString('en-US', { month: 'short', day: 'numeric' });
+      }
+      _formatCategory(txn) {
+        var category = txn.category;
+        if (txn.userCategory > 0) {
+          category = txn.userCategory;
+        }
+        switch (category) {
+          case 1: return 'Uncategorized';
+          case 2: return 'Entertainment';
+          case 3: return 'Eating Out';
+          case 4: return 'Groceries';
+          case 5: return 'Shopping';
+          case 6: return 'Health';
+        }
+      }
+      _formatAmount(amount) {
+        return formatAmount(amount);
+      }
+      _submitPatchReq() {
+        this.$.patchAjax.generateRequest();
+      }
+      _onSelectedItemsChanged(evt) {
+        this.selectedTxnIds = evt.target.selectedItems.map(t => t.id);
+      }
+      _onPatchAjaxResponse(evt) {
+        for (var i = 0; i < this.listResp.txns.length; i++) {
+          for (var j = 0; j < evt.target.lastResponse.txns.length; j++) {
+            if (this.listResp.txns[i].id == evt.target.lastResponse.txns[j].id) {
+              this.set('listResp.txns.'+i, evt.target.lastResponse.txns[j]);
+            }
+          }
+        }
+        this.$.txnList.clearSelection();
+      }
+    }
+    window.customElements.define(PluotTxns.is, PluotTxns);
+  </script>
+
+</dom-module>

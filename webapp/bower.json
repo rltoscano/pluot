@@ -19,7 +19,9 @@
     "iron-pages": "^2.0.0",
     "iron-form": "PolymerElements/iron-form#^2.0.0",
     "iron-overlay-behavior": "PolymerElements/iron-overlay-behavior#^2.0.0",
-    "iron-input": "PolymerElements/iron-input#^2.0.1"
+    "iron-input": "PolymerElements/iron-input#^2.0.1",
+    "paper-checkbox": "PolymerElements/paper-checkbox#^2.0.1",
+    "paper-dialog": "PolymerElements/paper-dialog#^2.0.0"
   },
   "devDependencies": {
     "web-component-tester": "Polymer/web-component-tester#^6.0.0",

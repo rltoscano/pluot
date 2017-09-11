@@ -6,6 +6,8 @@
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
 
+<script src="common.js"></script>
+
 <dom-module id="pluot-agg">
   <template>
     <style include="iron-flex iron-flex-alignment">
@@ -32,7 +34,6 @@
       <iron-ajax
           id="computeAggAjax"
           url="http://localhost:8080/svc/aggs"
-          auto
           method="POST"
           content-type="application/json"
           body="[[computeAggReq]]"
@@ -56,8 +57,7 @@
         return { start: start, end: end, category: parseInt(cat) };
       }
       _formatAmount(amount) {
-        var amountStr = String(amount);
-        return "$" + amountStr.substr(0, amountStr.length-2) + "." + amountStr.substr(-2);
+        return formatAmount(amount);
       }
     }
     window.customElements.define(PluotAgg.is, PluotAgg);

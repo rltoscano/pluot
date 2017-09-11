@@ -68,7 +68,7 @@
     </table>
     <paper-listbox multi selected-values="{{ignore}}">
       <template is="dom-repeat" items="[[checkUploadResp.duplicates]]">
-        <paper-item value="[[item.uploadIdx]]">
+        <paper-item value="[[item.uploadIdx]]" class="layout horizontal layout-start">
           <span class="dupDate">[[item.postDate]]</span>
           <span class="dupDisplayName" flex>[[item.displayName]]</span>
           <span class="dupAmount">[[item.amount]]</span>

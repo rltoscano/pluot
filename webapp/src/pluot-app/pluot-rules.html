@@ -1,0 +1,69 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+
+<dom-module id="pluot-rules">
+  <template>
+    <div>
+      <paper-input label="regexp" value="{{newRuleRegexp}}"></paper-input>
+      <paper-dropdown-menu>
+        <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{newRuleCategoryStr}}">
+          <paper-item code="1">Uncategorized</paper-item>
+          <paper-item code="2">Entertainment</paper-item>
+          <paper-item code="3">Eating Out</paper-item>
+          <paper-item code="4">Groceries</paper-item>
+          <paper-item code="5">Shopping</paper-item>
+          <paper-item code="6">Health</paper-item>
+        </paper-listbox>
+      </paper-dropdown-menu>
+      <paper-button on-tap="_onCreateRule">Create</paper-button>
+    </div>
+    <paper-listbox fullbleed>
+      <template is="dom-repeat" items="[[listRulesResp.rules]]" as="rule">
+        <paper-item>
+          <span>[[rule.regexp]]</span><span>[[rule.category]]</span>
+        </paper-item>
+      </template>
+    </paper-listbox>
+    <iron-ajax
+        auto
+        url="http://localhost:8080/svc/rules"
+        handle-as="json"
+        last-response="{{listRulesResp}}"></iron-ajax>
+    <iron-ajax
+        id="createRuleAjax"
+        url="http://localhost:8080/svc/rules"
+        method="POST"
+        content-type="application/json"
+        body="[[createRuleReq]]"
+        handle-as="json"
+        last-response="{{createRuleResp}}"></iron-ajax>
+  </template>
+
+  <script>
+    class PluotRules extends Polymer.Element {
+      static get is() { return 'pluot-rules'; }
+      static get properties() {
+        return {
+          createRuleReq: {
+            type: Object,
+            computed: '_computeCreateRuleReq(newRuleRegexp, newRuleCategoryStr)',
+          },
+        };
+      }
+      _computeCreateRuleReq(newRuleRegexp, newRuleCategoryStr) {
+        return { regexp: newRuleRegexp, category: parseInt(newRuleCategoryStr) };
+      }
+      _onCreateRule() {
+        this.$.createRuleAjax.generateRequest();
+      }
+    }
+
+    window.customElements.define(PluotRules.is, PluotRules);
+  </script>
+</dom-module>
