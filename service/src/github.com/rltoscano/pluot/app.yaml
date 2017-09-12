@@ -8,10 +8,17 @@ handlers:
   login: required
   static_files: web/index.html
   upload: web/index.html
+  secure: always
 - url: /bower_components
   static_dir: web/bower_components
+  secure: always
+  auth_fail_action: unauthorized
 - url: /src
   static_dir: web/src
+  secure: always
+  auth_fail_action: unauthorized
 - url: /svc/.*
   login: required
   script: _go_app
+  secure: always
+  auth_fail_action: unauthorized
