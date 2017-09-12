@@ -76,13 +76,13 @@
             <iron-pages selected="[[appView]]">
               <div>
                 <template is="dom-repeat" items="[[txnsToolbar]]">
-                  <paper-icon-button disabled="[[item.disabled]]" icon="[[item.icon]]" data-host="txns" handler="[[item.handler]]" on-tap="_onAction"></paper-icon-button>
+                  <paper-icon-button disabled="[[item.disabled]]" icon="[[item.icon]]" data-host="txns" data-handler$="[[item.handler]]" on-tap="_onAction"></paper-icon-button>
                 </template>
               </div>
               <div></div>
               <div>
                 <template is="dom-repeat" items="[[rulesToolbar]]">
-                  <paper-icon-button disabled="[[item.disabled]]" icon="[[item.icon]]" data-host="rules" handler="[[item.handler]]" on-tap="_onAction"></paper-icon-button>
+                  <paper-icon-button disabled="[[item.disabled]]" icon="[[item.icon]]" data-host="rules" data-handler$="[[item.handler]]" on-tap="_onAction"></paper-icon-button>
                 </template>
               </div>
               <div></div>
@@ -112,7 +112,7 @@
         };
       }
       _onAction(evt) {
-        this.$[evt.target.dataset.host][evt.target.handler]();
+        this.$[evt.target.dataset.host][evt.target.dataset.handler]();
       }
     }
     window.customElements.define(PluotApp.is, PluotApp);

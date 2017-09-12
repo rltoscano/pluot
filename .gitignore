@@ -1,1 +1,3 @@
 webapp/bower_components
+webapp/build
+service/src/github.com/rltoscano/pluot/web

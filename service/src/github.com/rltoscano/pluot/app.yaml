@@ -4,7 +4,14 @@ runtime: go
 api_version: go1.6
 
 handlers:
+- url: /
+  login: required
+  static_files: web/index.html
+  upload: web/index.html
+- url: /bower_components
+  static_dir: web/bower_components
+- url: /src
+  static_dir: web/src
 - url: /svc/.*
-  script: _go_app
-- url: /debug
+  login: required
   script: _go_app
