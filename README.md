@@ -1,38 +1,42 @@
 # Data Model
 
+## Currency
+All amounts are represented as 64-bit integers in US pennies and displayed in USD.
+
 ## Txn
 Financial transactions.
 
 Properties
-- id - int64
-- post_date - Timestamp
-- amount - Currency
-- original_display_name - string
-- display_name - string
-- user_display_name - string
-- note - string
-- category - Category
-- user_category
-- split - TxnSplit[]
-- last_updated - Timestamp
+- `ID` - `int64`
+- `PostDate` - `Timestamp`
+- `Amount` - `int64`
+- `OriginalDisplayName` - `string`, name of the transaction as imported
+- `DisplayName` - `string`, server-generated display friendly name of the transaction
+- `UserDisplayName` - `string`
+- `Note` - `string`
+- `Category` - `int`, system-generated category.
+- `UserCategory` - `int`, user override category.
+- `Split` - `TxnSplit[]`
+- `LastUpdated` - `Timestamp`
 
 ## TxnSplit
 A split of one transaction for the purpose of categorization.
 
 Properties
-- amount - Currency
-- display_name - string
-- note - string
+- `Amount` - `int64`
+- `DisplayName` - `string`
+- `Category` - `int`
+- `Note` - `string`
 
 ## UploadEvent
 
 Properties
-- `id` - string
-- `event_time` - Timestamp
-- `user` - string
-- `source` - string
-- `start` - Timestamp
-- `end` - Timestamp
+- `ID` - `string`
+- `EventTime` - `Timestamp`
+- `User` - `string`
+- `Source` - `string`
+- `Start` - `Timestamp`
+- `End` - `Timestamp`
 
 # Processes
 
@@ -49,20 +53,22 @@ Properties
 ## Upload
 
 Parameters
-- csv_data - Text of the CSV file.
-- parser - How to interpret the data.
+- `Csv` - `string`, text of the CSV file.
+- `Source` - `string`, source of the uploaded transactions. E.g. bank.
+- `Start` - `Timestamp`, starting bound of the upload which may before the earliest transaction in the upload
+- `End` - `Timestamp`, ending bound of the upload which may after the most recent transaction in the upload
 
 ## ComputeAggregation
 Calculates aggregations for a time-bound filtered list of transactions.
 
 Parameters
-- `start` - Timestamp
-- `end` - Timestamp
-- `category` - integer
+- `start` - `Timestamp`
+- `end` - `Timestamp`
+- `category` - `int`
 
 Results
-- `avg` - integer
-- `total` - integer
+- `Avg` - `int`
+- `Total` - `int`
 
 # UI
 
@@ -71,3 +77,5 @@ Results
 # TODO
 
 - [ ] Prevent CSRF attacks.
+- [ ] Create globals for host in webapp urls.
+- [ ] Create globals for category lists.
