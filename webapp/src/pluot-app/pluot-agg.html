@@ -1,5 +1,7 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
+<link rel="import" href="../pluot-app/pluot-globals.html">
+
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-input/iron-input.html">
@@ -23,17 +25,15 @@
         color: #583759;
       }
     </style>
+    <pluot-globals categories="{{categories}}"></pluot-globals>
     <div>
-      <iron-input bind-value="{{start}}"><input label="Start" type="date"/></iron-input>
-      <iron-input bind-value="{{end}}"><input label="End" type="date"/></iron-input>
+      <label for="start">Start</label><iron-input bind-value="{{start}}"><input id="start" type="date"/></iron-input>
+      <label for="end">End</label><iron-input bind-value="{{end}}"><input id="end" type="date"/></iron-input>
       <paper-dropdown-menu>
         <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{cat}}">
-          <paper-item code="1">Uncategorized</paper-item>
-          <paper-item code="2">Entertainment</paper-item>
-          <paper-item code="3">Eating Out</paper-item>
-          <paper-item code="4">Groceries</paper-item>
-          <paper-item code="5">Shopping</paper-item>
-          <paper-item code="6">Health</paper-item>
+          <template is="dom-repeat" items="[[categories]]" as="category">
+            <paper-item code="[[category.code]]">[[category.displayName]]</paper-item>
+          </template>
         </paper-listbox>
       </paper-dropdown-menu>
       <paper-icon-button icon="assessment" on-tap="_onCompute"></paper-icon-button>

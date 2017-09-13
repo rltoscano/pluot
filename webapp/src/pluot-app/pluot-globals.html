@@ -1,0 +1,48 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<dom-module id="pluot-globals">
+  <script>
+    (function() {
+      var categories = [
+        'Unknown',
+        'Uncategorized',
+        'Home Improvement',
+        'Eating Out',
+        'Groceries',
+        'Lifestyle',
+        'Health',
+        'Transportation',
+        'Residence',
+        'Bills',
+        'Travel',
+        'Gifts',
+        'Other Expense',
+        'Transfer',
+        'PayCheck',
+        'Bonus',
+        'Rentals',
+        'Other Income',
+      ];
+      var categoryObjs = [];
+      for (var i = 0; i < categories.length; i++) {
+        categoryObjs.push({ code: i, displayName: categories[i] });
+      }
+      class PluotGlobals extends Polymer.Element {
+        static get is() { return 'pluot-globals'; }
+        static get properties() {
+          return {
+            categories: {
+              type: Array,
+              value: categoryObjs,
+              notify: true
+            },
+          };
+        }
+        categoryName(code) {
+          return categories[code];
+        }
+      }
+      window.customElements.define(PluotGlobals.is, PluotGlobals);
+    })();
+  </script>
+</dom-module>

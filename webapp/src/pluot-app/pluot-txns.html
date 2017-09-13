@@ -1,5 +1,7 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
+<link rel="import" href="../pluot-app/pluot-globals.html">
+
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-list/iron-list.html">
@@ -34,6 +36,7 @@
         color: #fff;
       }
     </style>
+    <pluot-globals id="globals" categories="{{categories}}"></pluot-globals>
     <iron-list fullbleed items="[[listResp.txns]]" as="txn" multi-selection id="txnList" selection-enabled="true" on-selected-items-changed="_onSelectedItemsChanged">
       <template>
         <paper-item class$="layout horizontal is-selected-[[selected]]">
@@ -50,12 +53,9 @@
       <paper-input label="Description" value="{{editDisplayName}}"></paper-input>
       <paper-dropdown-menu label="Category">
         <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{editCategory}}">
-          <paper-item code="1">Uncategorized</paper-item>
-          <paper-item code="2">Entertainment</paper-item>
-          <paper-item code="3">Eating Out</paper-item>
-          <paper-item code="4">Groceries</paper-item>
-          <paper-item code="5">Shopping</paper-item>
-          <paper-item code="6">Health</paper-item>
+          <template is="dom-repeat" items="[[categories]]" as="category">
+            <paper-item code="[[category.code]]">[[category.displayName]]</paper-item>
+          </template>
         </paper-listbox>
       </paper-dropdown-menu>
       <div class="layout horizontal end-justified">
@@ -131,7 +131,7 @@
         if (txn.userCategory > 0) {
           category = txn.userCategory;
         }
-        return formatCategory(category);
+        return this.$.globals.categoryName(category);
       }
       _formatAmount(amount) {
         return formatAmount(amount);
