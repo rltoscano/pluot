@@ -2,15 +2,26 @@ package pluot
 
 import "time"
 
-// Transaction categories. Don't renumber these. Next: 6.
+// Transaction categories. Don't renumber these.
 const (
-	CategoryUnknown       = 0
-	CategoryUncategorized = 1
-	CategoryEntertainment = 2
-	CategoryEatingOut     = 3
-	CategoryGroceries     = 4
-	CategoryShopping      = 5
-	CategoryHealth        = 6
+	CategoryUnknown         = 0
+	CategoryUncategorized   = 1
+	CategoryHomeImprovement = 2
+	CategoryEatingOut       = 3
+	CategoryGroceries       = 4
+	CategoryLifestyle       = 5
+	CategoryHealth          = 6
+	CategoryTransportation  = 7
+	CategoryResidence       = 8
+	CategoryBills           = 9
+	CategoryTravel          = 10
+	CategoryGifts           = 11
+	CategoryOtherExpense    = 12
+	CategoryTransfer        = 13
+	CategoryPayCheck        = 14
+	CategoryBonus           = 15
+	CategoryRentals         = 16
+	CategoryOtherIncome     = 17
 )
 
 // Upload sources.
