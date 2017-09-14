@@ -246,5 +246,22 @@ func parseChase(csvRows [][]string) ([]Txn, error) {
 }
 
 func parseWellsfargo(csvRows [][]string) ([]Txn, error) {
-	return nil, nil
+	txns := make([]Txn, 0, len(csvRows))
+	for _, row := range csvRows {
+		postDate, err := time.Parse("01/02/2006", row[0])
+		if err != nil {
+			return nil, err
+		}
+		f, err := strconv.ParseFloat(row[1], 32)
+		if err != nil {
+			return nil, err
+		}
+		txns = append(txns, Txn{
+			PostDate:            postDate,
+			OriginalDisplayName: row[4],
+			Amount:              int64(f * 100),
+			Category:            CategoryUncategorized,
+		})
+	}
+	return txns, nil
 }

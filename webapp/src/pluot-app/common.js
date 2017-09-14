@@ -13,3 +13,8 @@ function formatCategory(category) {
     case 6: return 'Health';
   }
 }
+
+function formatDate(str) {
+  var d = new Date(Date.parse(str));
+  return d.toLocaleString('en-US', { month: 'short', day: 'numeric' });
+}
