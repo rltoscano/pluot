@@ -16,6 +16,9 @@
 <dom-module id="pluot-txns">
   <template>
     <style include="iron-flex iron-flex-alignment">
+      :host {
+        @apply --layout-vertical;
+      }
       .date {
         width: 64px;
       }
@@ -37,10 +40,17 @@
       }
     </style>
     <pluot-globals id="globals" categories="{{categories}}"></pluot-globals>
-    <iron-list fullbleed items="[[listResp.txns]]" as="txn" multi-selection id="txnList" selection-enabled="true" on-selected-items-changed="_onSelectedItemsChanged">
+    <iron-list
+        class="flex"
+        items="[[listResp.txns]]"
+        as="txn"
+        multi-selection
+        id="txnList"
+        selection-enabled
+        on-selected-items-changed="_onSelectedItemsChanged">
       <template>
         <paper-item class$="layout horizontal is-selected-[[selected]]">
-          <div class="date">[[_formateDate(txn.postDate)]]</div>
+          <div class="date">[[_formatDate(txn.postDate)]]</div>
           <div class="displayName flex">[[txn.originalDisplayName]]</div>
           <div class="amount">[[_formatAmount(txn.amount)]]</div>
           <div class="category">[[_formatCategory(txn)]]</div>
@@ -122,9 +132,8 @@
           fields: fields,
         };
       }
-      _formateDate(str) {
-        var d = new Date(Date.parse(str));
-        return d.toLocaleString('en-US', { month: 'short', day: 'numeric' });
+      _formatDate(str) {
+        return formatDate(str);
       }
       _formatCategory(txn) {
         var category = txn.category;
