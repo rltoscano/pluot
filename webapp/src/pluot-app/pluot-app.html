@@ -90,11 +90,11 @@
           </app-toolbar>
         </app-header>
 
-        <iron-pages selected="[[appView]]" fullbleed>
-          <pluot-txns id="txns" fullbleed toolbar="{{txnsToolbar}}"></pluot-txns>
-          <pluot-upload fullbleed></pluot-upload>
-          <pluot-rules id="rules" fullbleed toolbar="{{rulesToolbar}}"></pluot-rules>
-          <pluot-agg fullbleed></pluot-agg>
+        <iron-pages selected="[[appView]]" class="flex layout vertical">
+          <pluot-txns id="txns" class="flex" toolbar="{{txnsToolbar}}"></pluot-txns>
+          <pluot-upload class="flex" ></pluot-upload>
+          <pluot-rules id="rules" class="flex" toolbar="{{rulesToolbar}}"></pluot-rules>
+          <pluot-agg class="flex"></pluot-agg>
         </iron-pages>
 
       </app-header-layout>
@@ -108,7 +108,7 @@
       static get is() { return 'pluot-app'; }
       static get properties() {
         return {
-          appView: { type: Number, value: 2 },
+          appView: { type: Number, value: 3 },
         };
       }
       _onAction(evt) {

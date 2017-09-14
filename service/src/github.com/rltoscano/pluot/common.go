@@ -22,6 +22,8 @@ const (
 	CategoryBonus           = 15
 	CategoryRentals         = 16
 	CategoryOtherIncome     = 17
+	// This one should be renumbered to always be at the end.
+	CategoryEnd = 18
 )
 
 // Upload sources.

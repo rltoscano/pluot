@@ -2,6 +2,7 @@
 
 <link rel="import" href="../pluot-app/pluot-globals.html">
 
+<link rel="import" href="../../bower_components/google-chart/google-chart.html">
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-input/iron-input.html">
@@ -10,40 +11,42 @@
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
 
-<script src="common.js"></script>
-
 <dom-module id="pluot-agg">
   <template>
     <style include="iron-flex iron-flex-alignment">
       :host {
         font-family: sans-serif;
-      }
-      :host > * {
+        @apply --layout-vertical;
         padding: 16px;
       }
       paper-icon-button {
         color: #583759;
       }
+      google-chart {
+        height: 480px;
+        width: 640px;
+      }
     </style>
     <pluot-globals categories="{{categories}}"></pluot-globals>
     <div>
-      <label for="start">Start</label><iron-input bind-value="{{start}}"><input id="start" type="date"/></iron-input>
-      <label for="end">End</label><iron-input bind-value="{{end}}"><input id="end" type="date"/></iron-input>
-      <paper-dropdown-menu>
-        <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{cat}}">
-          <template is="dom-repeat" items="[[categories]]" as="category">
-            <paper-item code="[[category.code]]">[[category.displayName]]</paper-item>
-          </template>
+      <paper-dropdown-menu label="Time Window">
+        <paper-listbox slot="dropdown-content" attr-for-selected="timeWindow" selected="{{timeWindow}}">
+          <paper-item timeWindow="0">Last 30 days</paper-item>
+          <paper-item timeWindow="1">Last month</paper-item>
+          <paper-item timeWindow="2">Last 6 months</paper-item>
         </paper-listbox>
       </paper-dropdown-menu>
-      <paper-icon-button icon="assessment" on-tap="_onCompute"></paper-icon-button>
     </div>
-    <table>
-      <tr><td>Total</td><td>[[_formatAmount(computeAggResp.total)]]</td></tr>
-      <tr><td>Average</td><td>[[_formatAmount(computeAggResp.average)]]</td></tr>
-    </table>
+    <google-chart
+        class="flex"
+        type="pie"
+        cols='[{"label": "Category", "type": "string"},{"label": "Total", "type": "number"}]'
+        rows="[[rows]]"
+        options='{"pieHole": 0.3}'>
+    </google-chart>
     <iron-ajax
         id="computeAggAjax"
+        auto
         url="http://localhost:8080/svc/aggs"
         method="POST"
         content-type="application/json"
@@ -59,18 +62,35 @@
         return {
           computeAggReq: {
             type: Object,
-            computed: '_computeComputeAggReq(start, end, cat)'
+            computed: '_computeComputeAggReq(timeWindow)'
           },
+          rows: {
+            type: Array,
+            value: [],
+            computed: '_computeRows(computeAggResp, categories)'
+          },
+          timeWindow: { type: String, value: "0" },
         };
       }
-      _computeComputeAggReq(start, end, cat) {
-        return { start: start, end: end, category: parseInt(cat) };
+      _computeComputeAggReq(timeWindow) {
+        return { timeWindow: parseInt(timeWindow) };
+      }
+      _computeRows(computeAggResp, categories) {
+        if (typeof(computeAggResp) == 'undefined' || computeAggResp == null) {
+          return [];
+        }
+        var rows = [];
+        var ignoredCategories = [13, 14, 15, 16, 17];
+        for (var i = 0; i < categories.length; i++) {
+          if (ignoredCategories.includes(categories[i].code)) {
+            continue;
+          }
+          rows.push([categories[i].displayName, Math.abs(computeAggResp.totals[i]) / 100.0]);
+        }
+        return rows;
       }
       _onCompute() {
         this.$.computeAggAjax.generateRequest();
-      }
-      _formatAmount(amount) {
-        return formatAmount(amount);
       }
     }
     window.customElements.define(PluotAgg.is, PluotAgg);

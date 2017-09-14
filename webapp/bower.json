@@ -22,7 +22,8 @@
     "iron-input": "PolymerElements/iron-input#^2.0.1",
     "paper-checkbox": "PolymerElements/paper-checkbox#^2.0.1",
     "paper-dialog": "PolymerElements/paper-dialog#^2.0.0",
-    "paper-card": "PolymerElements/paper-card#^2.0.0"
+    "paper-card": "PolymerElements/paper-card#^2.0.0",
+    "google-chart": "GoogleWebComponents/google-chart#^2.0.0"
   },
   "devDependencies": {
     "web-component-tester": "Polymer/web-component-tester#^6.0.0",

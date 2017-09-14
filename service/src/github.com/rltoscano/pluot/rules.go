@@ -86,11 +86,7 @@ func listRules(c context.Context, r *http.Request, u *user.User) (interface{}, e
 
 func listRuleProposals(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
 	end := time.Now()
-	sixMonths, err := time.ParseDuration("4380h")
-	if err != nil {
-		return nil, err
-	}
-	start := end.Add(-sixMonths)
+	start := end.Add(-time.Hour * 24 * 30 * 6)
 	txns, err := loadTxns(c, start, end, CategoryUnknown)
 	if err != nil {
 		return nil, err
