@@ -78,7 +78,7 @@ func computeAggregation(c context.Context, r *http.Request, u *user.User) (inter
 		}
 		resp.Totals[cat] = resp.Totals[cat] + t.Amount
 		// Monthly.
-		for currMonth.AddDate(0, 1, 0).Before(t.PostDate) || !currMonth.AddDate(0, 1, 0).After(t.PostDate) {
+		for !currMonth.AddDate(0, 1, 0).After(t.PostDate) {
 			resp.Months = append(resp.Months, monthAgg)
 			currMonth = currMonth.AddDate(0, 1, 0)
 			monthAgg = MonthAgg{Month: monthStr(currMonth)}
