@@ -41,15 +41,14 @@
         class="flex"
         type="pie"
         cols='[{"label": "Category", "type": "string"},{"label": "Total", "type": "number"}]'
-        rows="[[rows]]"
+        rows="[[totals]]"
         options='{"pieHole": 0.3}'>
     </google-chart>
     <google-chart
         class="flex"
         type="column"
         cols='[{"label": "Month", "type": "string"}, {"label": "Spending", "type": "number"}, {"label": "Income", "type": "number"}]'
-        rows="[[monthly]]"
-        options='{"pieHole": 0.3}'>
+        rows="[[monthly]]">
     </google-chart>
     <iron-ajax
         id="computeAggAjax"
@@ -73,10 +72,10 @@
             computed: '_computeComputeAggReq(timeWindow)'
           },
           computeAggResp: { type: Object, value: { totals: [], months: [] } },
-          rows: {
+          totals: {
             type: Array,
             value: [],
-            computed: '_computeRows(computeAggResp, categories)'
+            computed: '_computeTotals(computeAggResp, categories)'
           },
           monthly: {
             type: Array, value: [], computed: '_computeMonthly(computeAggResp)'
@@ -88,18 +87,18 @@
       _computeComputeAggReq(timeWindow) {
         return { timeWindow: parseInt(timeWindow) };
       }
-      _computeRows(computeAggResp, categories) {
-        var rows = [];
+      _computeTotals(computeAggResp, categories) {
+        var totals = [];
         for (var i = 0; i < categories.length; i++) {
           if (!PluotAgg.ignoredCategories.includes(categories[i].code)) {
-            rows.push(
+            totals.push(
               [
                 categories[i].displayName,
                 Math.abs(computeAggResp.totals[i]) / 100.0
               ]);
           }
         }
-        return rows;
+        return totals;
       }
       _computeMonthly(computeAggResp) {
         return computeAggResp.months.map(
