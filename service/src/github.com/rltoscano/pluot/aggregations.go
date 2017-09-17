@@ -26,7 +26,15 @@ type ComputeAggregationRequest struct {
 
 // ComputeAggregationResponse contains the total and average aggregations.
 type ComputeAggregationResponse struct {
-	Totals []int64 `json:"totals"`
+	Totals []int64    `json:"totals"`
+	Months []MonthAgg `json:"months"`
+}
+
+// MonthAgg contains the aggregation of expenses and income over one month.
+type MonthAgg struct {
+	Month   string `json:"month"`
+	Expense int64  `json:"expense"`
+	Income  int64  `json:"income"`
 }
 
 func computeAggregation(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
@@ -35,6 +43,7 @@ func computeAggregation(c context.Context, r *http.Request, u *user.User) (inter
 		return nil, pihen.Error{http.StatusBadRequest, err.Error()}
 	}
 	var start, end time.Time
+	pst, _ := time.LoadLocation("America/Los_Angeles")
 	switch req.TimeWindow {
 	case TimeWindowLast30Days:
 		end = time.Now()
@@ -42,28 +51,51 @@ func computeAggregation(c context.Context, r *http.Request, u *user.User) (inter
 		break
 	case TimeWindowLastMonth:
 		now := time.Now()
-		end = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
-		start = end.AddDate(0, -1, 0)
+		end = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, pst)
+		start = end.AddDate(0, -1, -1)
 		break
 	case TimeWindowLast6Months:
 		now := time.Now()
-		end = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		end = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, pst)
 		start = end.AddDate(0, -6, 0)
 		break
 	}
-	txns, err := loadTxns(c, start, end, CategoryUnknown)
+	txns, err := loadTxns(c, start, end, CategoryUnknown, true)
 	if err != nil {
 		return nil, err
 	}
 	resp := ComputeAggregationResponse{
 		Totals: make([]int64, CategoryEnd),
+		Months: []MonthAgg{},
 	}
+	currMonth := start
+	monthAgg := MonthAgg{Month: monthStr(currMonth)}
 	for _, t := range txns {
+		// Totals.
 		cat := t.Category
 		if t.UserCategory > 0 {
 			cat = t.UserCategory
 		}
 		resp.Totals[cat] = resp.Totals[cat] + t.Amount
+		// Monthly.
+		for currMonth.AddDate(0, 1, 0).Before(t.PostDate) || !currMonth.AddDate(0, 1, 0).After(t.PostDate) {
+			resp.Months = append(resp.Months, monthAgg)
+			currMonth = currMonth.AddDate(0, 1, 0)
+			monthAgg = MonthAgg{Month: monthStr(currMonth)}
+		}
+		if IsExpenseCategory(cat) {
+			monthAgg.Expense = monthAgg.Expense - t.Amount
+		}
+		if IsIncomeCategory(cat) {
+			monthAgg.Income = monthAgg.Income + t.Amount
+		}
 	}
+
+	resp.Months = append(resp.Months, monthAgg)
+
 	return resp, nil
+}
+
+func monthStr(t time.Time) string {
+	return t.Format("Jan 2006")
 }

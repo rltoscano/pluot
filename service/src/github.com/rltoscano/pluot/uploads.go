@@ -84,7 +84,7 @@ func checkUpload(c context.Context, r *http.Request, u *user.User) (interface{},
 	}
 
 	// Load existing transactions.
-	existingTxns, err := loadTxns(c, start, end, CategoryUnknown)
+	existingTxns, err := loadTxns(c, start, end, CategoryUnknown, false)
 	if err != nil {
 		return nil, err
 	}
@@ -226,8 +226,9 @@ func parseTxns(csvStr string, source string) ([]Txn, error) {
 // First row is headers.
 func parseChase(csvRows [][]string) ([]Txn, error) {
 	txns := make([]Txn, 0, len(csvRows)-1)
+	pst, _ := time.LoadLocation("America/Los_Angeles")
 	for _, row := range csvRows[1:] {
-		postDate, err := time.Parse("01/02/2006", row[2])
+		postDate, err := time.ParseInLocation("01/02/2006", row[2], pst)
 		if err != nil {
 			return nil, err
 		}
@@ -247,8 +248,9 @@ func parseChase(csvRows [][]string) ([]Txn, error) {
 
 func parseWellsfargo(csvRows [][]string) ([]Txn, error) {
 	txns := make([]Txn, 0, len(csvRows))
+	pst, _ := time.LoadLocation("America/Los_Angeles")
 	for _, row := range csvRows {
-		postDate, err := time.Parse("01/02/2006", row[0])
+		postDate, err := time.ParseInLocation("01/02/2006", row[0], pst)
 		if err != nil {
 			return nil, err
 		}

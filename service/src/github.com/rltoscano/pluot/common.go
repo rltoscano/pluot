@@ -26,6 +26,31 @@ const (
 	CategoryEnd = 18
 )
 
+var (
+	// IncomeCategories is a list of all income categories.
+	IncomeCategories = []int{
+		CategoryPayCheck,
+		CategoryBonus,
+		CategoryRentals,
+		CategoryOtherIncome,
+	}
+	// ExpenseCategories is a list of all expense categories.
+	ExpenseCategories = []int{
+		CategoryUncategorized,
+		CategoryHomeImprovement,
+		CategoryEatingOut,
+		CategoryGroceries,
+		CategoryLifestyle,
+		CategoryHealth,
+		CategoryTransportation,
+		CategoryResidence,
+		CategoryBills,
+		CategoryTravel,
+		CategoryGifts,
+		CategoryOtherExpense,
+	}
+)
+
 // Upload sources.
 const (
 	SourceChase      = "chase"
@@ -44,4 +69,24 @@ type Txn struct {
 	Category            int       `json:"category"`
 	UserCategory        int       `json:"userCategory"`
 	UploadID            int64     `json:"uploadId"`
+}
+
+// IsExpenseCategory returns whether the given category is an expense.
+func IsExpenseCategory(category int) bool {
+	for _, c := range ExpenseCategories {
+		if c == category {
+			return true
+		}
+	}
+	return false
+}
+
+// IsIncomeCategory returns whether the given category is income.
+func IsIncomeCategory(category int) bool {
+	for _, c := range IncomeCategories {
+		if c == category {
+			return true
+		}
+	}
+	return false
 }

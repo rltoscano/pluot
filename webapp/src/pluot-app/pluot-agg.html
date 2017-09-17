@@ -44,6 +44,13 @@
         rows="[[rows]]"
         options='{"pieHole": 0.3}'>
     </google-chart>
+    <google-chart
+        class="flex"
+        type="column"
+        cols='[{"label": "Month", "type": "string"}, {"label": "Spending", "type": "number"}, {"label": "Income", "type": "number"}]'
+        rows="[[monthly]]"
+        options='{"pieHole": 0.3}'>
+    </google-chart>
     <iron-ajax
         id="computeAggAjax"
         auto
@@ -69,6 +76,9 @@
             value: [],
             computed: '_computeRows(computeAggResp, categories)'
           },
+          monthly: {
+            type: Array, value: [], computed: '_computeMonthly(computeAggResp)'
+          },
           timeWindow: { type: String, value: "0" },
         };
       }
@@ -89,8 +99,12 @@
         }
         return rows;
       }
-      _onCompute() {
-        this.$.computeAggAjax.generateRequest();
+      _computeMonthly(computeAggResp) {
+        if (typeof(computeAggResp) == 'undefined' || computeAggResp == null) {
+          return [];
+        }
+        return computeAggResp.months.map(
+          m => [m.month, m.expense / 100.0, m.income / 100.0]);
       }
     }
     window.customElements.define(PluotAgg.is, PluotAgg);

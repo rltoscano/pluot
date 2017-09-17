@@ -35,7 +35,7 @@ type PatchTxnsRequest struct {
 
 // listTxns lists the transactions in the database.
 func listTxns(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
-	txns, err := loadTxns(c, time.Time{}, time.Time{}, CategoryUnknown)
+	txns, err := loadTxns(c, time.Time{}, time.Time{}, CategoryUnknown, false)
 	return ListTxnsResponse{txns}, err
 }
 
@@ -125,7 +125,7 @@ func applyFields(source, dest *Txn, fields []string) error {
 }
 
 // Returns transactions in reverse-chronological order. `end` is exclusive.
-func loadTxns(c context.Context, start, end time.Time, cat int) ([]Txn, error) {
+func loadTxns(c context.Context, start, end time.Time, cat int, asc bool) ([]Txn, error) {
 	q := datastore.NewQuery("Txn")
 	if !start.IsZero() {
 		q = q.Filter("PostDate >= ", start)
@@ -133,7 +133,11 @@ func loadTxns(c context.Context, start, end time.Time, cat int) ([]Txn, error) {
 	if !end.IsZero() {
 		q = q.Filter("PostDate <", end)
 	}
-	q = q.Order("-PostDate")
+	if asc {
+		q = q.Order("PostDate")
+	} else {
+		q = q.Order("-PostDate")
+	}
 	txns := []Txn{}
 	keys, err := q.GetAll(c, &txns)
 	if err != nil {
