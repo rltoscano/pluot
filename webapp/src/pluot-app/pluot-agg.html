@@ -65,12 +65,14 @@
   <script>
     class PluotAgg extends Polymer.Element {
       static get is() { return 'pluot-agg'; }
+      static get ignoredCategories() { return [13, 14, 15, 16, 17]; }
       static get properties() {
         return {
           computeAggReq: {
             type: Object,
             computed: '_computeComputeAggReq(timeWindow)'
           },
+          computeAggResp: { type: Object, value: { totals: [], months: [] } },
           rows: {
             type: Array,
             value: [],
@@ -80,29 +82,26 @@
             type: Array, value: [], computed: '_computeMonthly(computeAggResp)'
           },
           timeWindow: { type: String, value: "0" },
+          categories: { type: Array, value: [] },
         };
       }
       _computeComputeAggReq(timeWindow) {
         return { timeWindow: parseInt(timeWindow) };
       }
       _computeRows(computeAggResp, categories) {
-        if (typeof(computeAggResp) == 'undefined' || computeAggResp == null) {
-          return [];
-        }
         var rows = [];
-        var ignoredCategories = [13, 14, 15, 16, 17];
         for (var i = 0; i < categories.length; i++) {
-          if (ignoredCategories.includes(categories[i].code)) {
-            continue;
+          if (!PluotAgg.ignoredCategories.includes(categories[i].code)) {
+            rows.push(
+              [
+                categories[i].displayName,
+                Math.abs(computeAggResp.totals[i]) / 100.0
+              ]);
           }
-          rows.push([categories[i].displayName, Math.abs(computeAggResp.totals[i]) / 100.0]);
         }
         return rows;
       }
       _computeMonthly(computeAggResp) {
-        if (typeof(computeAggResp) == 'undefined' || computeAggResp == null) {
-          return [];
-        }
         return computeAggResp.months.map(
           m => [m.month, m.expense / 100.0, m.income / 100.0]);
       }

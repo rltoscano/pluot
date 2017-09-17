@@ -125,11 +125,15 @@
             notify: true,
             computed: '_computeToolbar(selectedRule)'
           },
+          newRulePattern: { type: String, value: "" },
+          newRuleCategoryStr: { type: String, value: "" },
+          newRuleRegexp: { type: Boolean, value: false },
         };
       }
       create() {
         this.newRulePattern = "";
         this.newRuleCategoryStr = "";
+        this.newRuleRegexp = false;
         this.$.editDialog.open();
       }
       delete() {
