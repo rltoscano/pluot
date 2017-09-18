@@ -52,7 +52,7 @@ func computeAggregation(c context.Context, r *http.Request, u *user.User) (inter
 	case TimeWindowLastMonth:
 		now := time.Now()
 		end = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, pst)
-		start = end.AddDate(0, -1, -1)
+		start = end.AddDate(0, -1, 0)
 		break
 	case TimeWindowLast6Months:
 		now := time.Now()
