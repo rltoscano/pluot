@@ -1,5 +1,7 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
+<link rel="import" href="../pluot-app/pluot-globals.html">
+
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-form/iron-form.html">
@@ -48,6 +50,7 @@
         padding-top: 16px;
       }
     </style>
+    <pluot-globals id="globals"></pluot-globals>
     <paper-card class="layout vertical dupCheckForm">
       <label>Check for Duplicates</label>
       <div class="formElement">
@@ -102,13 +105,13 @@
     </paper-card>
     <iron-ajax
         id="createUploadAjax"
-        url="http://localhost:8080/svc/uploads"
+        url="[[$.globals.urlPrefix]]uploads"
         method="POST"
         body="[[uploadReq]]"
         content-type="application/json"></iron-ajax>
     <iron-ajax
         id="checkUploadAjax"
-        url="http://localhost:8080/svc/uploads:check"
+        url="[[$.globals.urlPrefix]]uploads:check"
         method="POST"
         body="[[uploadReq]]"
         content-type="application/json"

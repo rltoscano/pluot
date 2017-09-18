@@ -27,7 +27,7 @@
         width: 640px;
       }
     </style>
-    <pluot-globals categories="{{categories}}"></pluot-globals>
+    <pluot-globals id="globals" categories="{{categories}}"></pluot-globals>
     <div>
       <paper-dropdown-menu label="Time Window">
         <paper-listbox slot="dropdown-content" attr-for-selected="timeWindow" selected="{{timeWindow}}">
@@ -53,7 +53,7 @@
     <iron-ajax
         id="computeAggAjax"
         auto
-        url="http://localhost:8080/svc/aggs"
+        url="[[$.globals.urlPrefix]]aggs"
         method="POST"
         content-type="application/json"
         body="[[computeAggReq]]"

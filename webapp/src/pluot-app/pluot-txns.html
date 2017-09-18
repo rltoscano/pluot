@@ -76,12 +76,12 @@
 
     <iron-ajax
         auto
-        url="http://localhost:8080/svc/txns"
+        url="[[$.globals.urlPrefix]]txns"
         handle-as="json"
         last-response="{{listResp}}"></iron-ajax>
     <iron-ajax
         id="patchAjax"
-        url="http://localhost:8080/svc/txns"
+        url="[[$.globals.urlPrefix]]txns"
         method="PATCH"
         content-type="application/json"
         body="[[patchReq]]"

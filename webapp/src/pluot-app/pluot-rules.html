@@ -1,5 +1,7 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
+<link rel="import" href="../pluot-app/pluot-globals.html">
+
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
@@ -37,6 +39,8 @@
         color: #fff;
       }
     </style>
+
+    <pluot-globals id="globals"></pluot-globals>
 
     <paper-dialog id="editDialog" class="layout vertical">
       <paper-input label="Pattern" value="{{newRulePattern}}"></paper-input>
@@ -88,17 +92,17 @@
 
     <iron-ajax
         auto
-        url="http://localhost:8080/svc/rules"
+        url="[[$.globals.urlPrefix]]rules"
         handle-as="json"
         last-response="{{listRulesResp}}"></iron-ajax>
     <iron-ajax
         auto
-        url="http://localhost:8080/svc/rules:proposal"
+        url="[[$.globals.urlPrefix]]rules:proposal"
         handle-as="json"
         last-response="{{listRuleProposalsResp}}"></iron-ajax>
     <iron-ajax
         id="createRuleAjax"
-        url="http://localhost:8080/svc/rules"
+        url="[[$.globals.urlPrefix]]rules"
         method="POST"
         content-type="application/json"
         body="[[createRuleReq]]"
@@ -106,7 +110,7 @@
         on-response="_addRule"></iron-ajax>
     <iron-ajax
         id="deleteRuleAjax"
-        url="http://localhost:8080/svc/rules/[[selectedRule.id]]"
+        url="[[$.globals.urlPrefix]]rules/[[selectedRule.id]]"
         method="DELETE"
         on-response="_removeRule"></iron-ajax>
   </template>
