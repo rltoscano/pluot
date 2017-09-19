@@ -47,12 +47,9 @@
       <paper-checkbox checked="{{newRuleRegexp}}">Regexp</paper-checkbox>
       <paper-dropdown-menu label="Category">
         <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{newRuleCategoryStr}}">
-          <paper-item code="1">Uncategorized</paper-item>
-          <paper-item code="2">Entertainment</paper-item>
-          <paper-item code="3">Eating Out</paper-item>
-          <paper-item code="4">Groceries</paper-item>
-          <paper-item code="5">Shopping</paper-item>
-          <paper-item code="6">Health</paper-item>
+          <template is="dom-repeat" items="[[$.globals.categories]]" as="category">
+            <paper-item code$="[[category.code]]">[[category.displayName]]</paper-item>
+          </template>
         </paper-listbox>
       </paper-dropdown-menu>
       <div class="layout horizontal end-justified">
@@ -177,7 +174,7 @@
       _onCreateRule() {
         this.$.createRuleAjax.generateRequest();
       }
-      _formatCategory(category) { return formatCategory(category); }
+      _formatCategory(category) { return this.$.globals.categoryName(category); }
       _onProposalTap(evt) {
         this.newRulePattern = evt.currentTarget.dataset.pattern;
         this.newRuleCategoryStr = evt.currentTarget.dataset.category;
