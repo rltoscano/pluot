@@ -1,3 +1,18 @@
+# Installation
+
+1. Pull down all the polymer depedencies with `polymer install` run from the
+   webapp folder.
+
+# Deployment
+
+1. Run `go run tool/package_webapp.go` to build the web app and copy it to the
+   service folder.
+1. Run `dev_appserver.py service/src/github.com/rltoscano/pluot/app.yaml` to run
+   a development server. The server will be started at http://localhost:8080
+1. To deploy to prod run
+   `gcloud app deploy service/src/github.com/rltoscano/pluot/app.yaml --project=$MYPROJECT`
+   where $MYPROJECT is set to whatever Appengine app you've created.
+
 # Data Model
 
 ## Currency
