@@ -1,11 +1,11 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
 <link rel="import" href="../pluot-app/pluot-globals.html">
+<link rel="import" href="../pluot-app/pluot-rule.html">
 
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../../bower_components/paper-card/paper-card.html">
 <link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
@@ -17,26 +17,23 @@
 <dom-module id="pluot-rules">
   <template>
     <style include="iron-flex iron-flex-alignment">
-      paper-card {
-        padding: 16px;
-        cursor: pointer;
+      :host {
+        @apply(--layout-vertical);
+        @apply(--layout-flex);
       }
       label {
         font-family: sans-serif;
-        font-size: 16pt;
+        font-size: 14pt;
         padding: 16px;
       }
-      iron-list > div {
-        padding: 16px;
-        margin-right: 16px;
+      iron-list {
+        --iron-list-items-container: {
+          padding: 16px;
+        };
       }
-      iron-list paper-card {
-        width: 200px;
-        height: 100px;
-      }
-      iron-list paper-card.is-selected-true {
-        background-color: #583759;
-        color: #fff;
+      iron-list div {
+        padding: 16px 0 0 16px;
+        cursor: pointer;
       }
     </style>
 
@@ -45,6 +42,7 @@
     <paper-dialog id="editDialog" class="layout vertical">
       <paper-input label="Pattern" value="{{newRulePattern}}"></paper-input>
       <paper-checkbox checked="{{newRuleRegexp}}">Regexp</paper-checkbox>
+      <paper-input label="Name" value="{{newRuleDisplayName}}"></paper-input>
       <paper-dropdown-menu label="Category">
         <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{newRuleCategoryStr}}">
           <template is="dom-repeat" items="[[$.globals.categories]]" as="category">
@@ -58,34 +56,24 @@
       </div>
     </paper-dialog>
 
-    <div class="layout vertical" fullbleed>
-      <label>Proposed Rules</label>
-      <iron-list items="[[listRuleProposalsResp.rules]]" as="rule" grid>
-        <template>
-          <div>
-            <paper-card class="layout vertical"
-                on-tap="_onProposalTap"
-                data-pattern$="[[rule.pattern]]"
-                data-category$="[[rule.category]]">
-              <span>[[rule.pattern]]</span>
-              <span>[[_formatCategory(rule.category)]]</span>
-            </paper-card>
-          </div>
-        </template>
-      </iron-list>
+    <label>Proposed Rules</label>
+    <iron-list scroll-target="document" items="[[listRuleProposalsResp.rules]]" as="rule" grid>
+      <template>
+        <div>
+          <pluot-rule rule="[[rule]]" on-tap="_onProposalTap"></pluot-rule>
+        </div>
+      </template>
+    </iron-list>
 
-      <label>Rules</label>
-      <iron-list items="[[listRulesResp.rules]]" as="rule" grid selection-enabled="true" selected-item="{{selectedRule}}">
-        <template>
-          <div>
-            <paper-card class$="layout vertical is-selected-[[selected]]">
-              <span>[[rule.pattern]]</span>
-              <span>[[_formatCategory(rule.category)]]</span>
-            </paper-card>
-          </div>
-        </template>
-      </iron-list>
-    </div>
+    <label>Rules</label>
+    <iron-list scroll-target="document" class="flex" items="[[listRulesResp.rules]]" as="rule" grid
+        selection-enabled="true" selected-item="{{selectedRule}}">
+      <template>
+        <div>
+          <pluot-rule rule="[[rule]]" selected="[[selected]]"></pluot-rule>
+        </div>
+      </template>
+    </iron-list>
 
     <iron-ajax
         auto
@@ -119,7 +107,7 @@
         return {
           createRuleReq: {
             type: Object,
-            computed: '_computeCreateRuleReq(newRulePattern, newRuleRegexp, newRuleCategoryStr)',
+            computed: '_computeCreateRuleReq(newRulePattern, newRuleRegexp, newRuleCategoryStr, newRuleDisplayName)',
           },
           toolbar: {
             type: Array,
@@ -129,6 +117,7 @@
           newRulePattern: { type: String, value: "" },
           newRuleCategoryStr: { type: String, value: "" },
           newRuleRegexp: { type: Boolean, value: false },
+          newRuleDisplayName: { type: String, value: "" },
         };
       }
       create() {
@@ -158,10 +147,11 @@
           this.splice('listRulesResp.rules', deleted, 1);
         }
       }
-      _computeCreateRuleReq(newRulePattern, newRuleRegexp, newRuleCategoryStr) {
+      _computeCreateRuleReq(newRulePattern, newRuleRegexp, newRuleCategoryStr, newRuleDisplayName) {
         return {
           pattern: newRulePattern,
           regexp: newRuleRegexp,
+          displayName: newRuleDisplayName,
           category: parseInt(newRuleCategoryStr)
         };
       }
@@ -176,8 +166,9 @@
       }
       _formatCategory(category) { return this.$.globals.categoryName(category); }
       _onProposalTap(evt) {
-        this.newRulePattern = evt.currentTarget.dataset.pattern;
-        this.newRuleCategoryStr = evt.currentTarget.dataset.category;
+        this.newRulePattern = evt.currentTarget.rule.pattern;
+        this.newRuleCategoryStr = String(evt.currentTarget.rule.category);
+        this.newRuleDisplayName = evt.currentTarget.rule.displayName;
         this.$.editDialog.open();
       }
     }

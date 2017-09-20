@@ -1,0 +1,63 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<link rel="import" href="../pluot-app/pluot-globals.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/paper-card/paper-card.html">
+
+<dom-module id="pluot-rule">
+  <template>
+    <style include="iron-flex iron-flex-alignment">
+      :host {
+        display: block;
+        width: 264px;
+        height: 180px;
+        font-family: sans-serif;
+        @apply(--layout-horizontal);
+      }
+      paper-card > .label:first-child {
+        margin-top: 0px;
+      }
+      .label {
+        font-size: 10pt;
+        margin-top: 16px;
+        color: gray;
+      }
+      paper-card {
+        padding: 16px;
+      }
+      paper-card.is-selected-true {
+        background-color: #583759;
+        color: #fff;
+      }
+    </style>
+
+    <pluot-globals id="globals"></pluot-globals>
+
+    <paper-card class$="layout vertical flex is-selected-[[selected]]">
+      <div class="label">Pattern<template is="dom-if" if="[[rule.regexp]]"> (regexp)</template></div>
+      <div class="flex">[[rule.pattern]]</div>
+      <div class="label">Name</div>
+      <div>[[rule.displayName]]</div>
+      <div class="label">Category</div>
+      <div>[[_formatCategory(rule.category)]]</div>
+    </paper-card>
+
+  </template>
+
+  <script>
+    class PluotRule extends Polymer.Element {
+      static get is() { return 'pluot-rule'; }
+      static get properties() {
+        return {
+          rule: { type: Object, value: null },
+          selected: { type: Boolean, value: false },
+        };
+      }
+      _formatCategory(cat) {
+        return this.$.globals.categoryName(cat);
+      }
+    }
+    window.customElements.define(PluotRule.is, PluotRule);
+  </script>
+</dom-module>

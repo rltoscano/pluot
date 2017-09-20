@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+    <title>pluot-rules test</title>
+    <script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="/bower_components/web-component-tester/browser.js"></script>
+    <link rel="import" href="/src/pluot-app/pluot-rules.html">
+    <style>
+      body {
+        display: flex;
+      }
+    </style>
+  </head>
+  <body>
+    <script>
+      var server = sinon.fakeServer.create();
+      var testRules = [{
+        id: 0,
+        pattern: "this is a pattern",
+        regexp: true,
+        displayName: "this is a display name",
+        category: 3,
+        created: "2017-09-18T01:47:11.228759Z"
+      },{
+        id: 0,
+        pattern: "this is a pattern",
+        regexp: true,
+        displayName: "this is a display name",
+        category: 3,
+        created: "2017-09-18T01:47:11.228759Z"
+      },{
+        id: 0,
+        pattern: "this is a pattern",
+        regexp: true,
+        displayName: "this is a display name",
+        category: 3,
+        created: "2017-09-18T01:47:11.228759Z"
+      },{
+        id: 0,
+        pattern: "this is a pattern",
+        regexp: true,
+        displayName: "this is a display name",
+        category: 3,
+        created: "2017-09-18T01:47:11.228759Z"
+      },{
+        id: 1,
+        pattern: "pat turn",
+        regexp: false,
+        displayName: "",
+        category: 8,
+        created: "2017-09-18T01:47:11.228759Z"
+      }];
+      server.respondWith(
+        'GET',
+        '/svc/rules',
+        [ 200, { 'Content-Type': 'application/json' }, JSON.stringify({rules: testRules}) ]
+      );
+      server.respondWith(
+        'GET',
+        '/svc/rules:proposal',
+        [ 200, { 'Content-Type': 'application/json' }, JSON.stringify({rules: testRules}) ]
+      );
+    </script>
+    <pluot-rules id="rules"></pluot-rules>
+    <script>
+      server.respond();
+    </script>
+  </body>
+</html>
