@@ -12,6 +12,7 @@
 <link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 
 <script src="common.js"></script>
 
@@ -21,7 +22,7 @@
       :host {
         font-family: sans-serif;
         padding: 16px;
-        @apply --layout-vertical;
+        @apply(--layout-vertical);
       }
       .dupDate {
         width: 64px;
@@ -29,10 +30,6 @@
       paper-card {
         padding: 16px;
         margin-bottom: 16px;
-      }
-      label {
-        font-weight: bold;
-        padding-bottom: 16px;
       }
       .formElement {
         height: 64px;
@@ -51,8 +48,7 @@
       }
     </style>
     <pluot-globals id="globals"></pluot-globals>
-    <paper-card class="layout vertical dupCheckForm">
-      <label>Check for Duplicates</label>
+    <paper-card class="layout vertical dupCheckForm" heading="Check for Duplicates">
       <div class="formElement">
         <div>Source</div>
         <paper-dropdown-menu>
@@ -82,27 +78,30 @@
         <paper-button on-tap="_submitCheckUpload" raised>Check</paper-button>
       </div>
     </paper-card>
-    <paper-card class="flex layout vertical">
-      <label>Potential Duplicate Transactions ([[ignore.length]] selected)</label>
-      <iron-list
-          class="flex"
-          items="[[checkUploadResp.duplicates]]"
-          selection-enabled
-          multi-selection
-          attr-for-selected="data-upload-idx"
-          on-selected-items-changed="_onSelectedItemsChanged">
-        <template>
-          <paper-item data-upload-idx$="[[item.uploadIdx]]" class$="layout horizontal is-selected-[[selected]]">
-            <span class="dupDate">[[_formatDate(item.postDate)]]</span>
-            <span class="dupDisplayName flex">[[item.displayName]]</span>
-            <span class="dupAmount">[[_formatAmount(item.amount)]]</span>
-          </paper-item>
-        </template>
-      </iron-list>
-      <div class="actions">
-        <paper-button on-tap="_submitCreateUpload" raised>Upload</paper-button>
-      </div>
-    </paper-card>
+    <template is="dom-if" if="[[checkUploadResp]]">
+      <paper-card class="layout vertical" heading="Potential Duplicate Transactions ([[ignore.length]] selected)">
+        <iron-list
+            class="flex"
+            items="[[checkUploadResp.duplicates]]"
+            selection-enabled
+            multi-selection
+            attr-for-selected="data-upload-idx"
+            on-selected-items-changed="_onSelectedItemsChanged"
+            scroll-target="document">
+          <template>
+            <paper-item data-upload-idx$="[[item.uploadIdx]]" class$="layout horizontal is-selected-[[selected]]">
+              <span class="dupDate">[[_formatDate(item.postDate)]]</span>
+              <span class="dupDisplayName flex">[[item.displayName]]</span>
+              <span class="dupAmount">[[_formatAmount(item.amount)]]</span>
+            </paper-item>
+          </template>
+        </iron-list>
+        <div class="actions">
+          <paper-button on-tap="_submitCreateUpload" raised>Upload</paper-button>
+        </div>
+      </paper-card>
+    </template>
+    <paper-toast id="toast"></paper-toast>
     <iron-ajax
         id="createUploadAjax"
         url="[[$.globals.urlPrefix]]uploads"
@@ -116,7 +115,8 @@
         body="[[uploadReq]]"
         content-type="application/json"
         handle-as="json"
-        last-response="{{checkUploadResp}}"></iron-ajax>
+        last-response="{{checkUploadResp}}"
+        on-error="_onCheckUploadError"></iron-ajax>
 
   </template>
   <script>
@@ -133,6 +133,7 @@
             type: Object,
             computed: '_computeUploadReq(source, csv, start, end, ignore)',
           },
+          checkUploadResp: { type: Object, value: null },
         };
       }
       _computeUploadReq(source, csv, start, end, ignore) {
@@ -167,6 +168,16 @@
       }
       _formatAmount(amount) { return formatAmount(amount); }
       _formatDate(str) { return formatDate(str); }
+      _onCheckUploadError(evt) {
+        if (evt.currentTarget.lastError.status >= 500) {
+          this.$.toast.text = "Looks like there's a problem!";
+        } else if (evt.currentTarget.lastError.status >= 400) {
+          this.$.toast.text = "There's a bug!";
+        } else {
+          this.$.toast.text = "Unexpected error!";
+        }
+        this.$.toast.open();
+      }
     }
     window.customElements.define(PluotUpload.is, PluotUpload);
   </script>

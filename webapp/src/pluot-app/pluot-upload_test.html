@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+    <title>pluot-upload test</title>
+    <script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
+    <script src="/bower_components/web-component-tester/browser.js"></script>
+    <link rel="import" href="/src/pluot-app/pluot-upload.html">
+    <link rel="import" href="/bower_components/paper-radio-group/paper-radio-group.html">
+    <link rel="import" href="/bower_components/paper-radio-button/paper-radio-button.html">
+    <script>
+      var server = sinon.fakeServer.create();
+      server.autoRespond = true;
+      function setState(evt) {
+        var status = parseInt(evt.currentTarget.selected);
+        var body;
+        if (status >= 500) {
+          body = 'Something bad happened on the server.';
+        } else if (status >= 400) {
+          body = 'Some kind of 400 error';
+        } else if (status >= 200) {
+          body = JSON.stringify({
+            duplicates: [
+              { dupId: 100, uploadIdx: 5, postDate: "2017-08-31T07:00:00Z", displayName: "this is the display name", amount: 5000 },
+              { dupId: 100, uploadIdx: 5, postDate: "2017-08-31T07:00:00Z", displayName: "this is the display name", amount: 5000 },
+              { dupId: 100, uploadIdx: 5, postDate: "2017-08-31T07:00:00Z", displayName: "this is the display name", amount: 5000 },
+            ]
+          });
+        } else {
+          alert('Problem in test.')
+        }
+        server.respondWith(
+          'POST',
+          '/svc/uploads:check',
+          [ status, { 'Content-Type': 'application/json' }, body ]
+        );
+        server.respondWith(
+          'POST',
+          '/svc/uploads',
+          [ status, { 'Content-Type': 'application/json' }, body ]
+        );
+      }
+    </script>
+  </head>
+  <body>
+    <paper-radio-group id="status">
+      <paper-radio-button name="200">200 Success</paper-radio-button>
+      <paper-radio-button name="404">404 Error</paper-radio-button>
+      <paper-radio-button name="500">500 Error</paper-radio-button>
+    </paper-radio-group>
+    <pluot-upload class="flex"></pluot-upload>
+    <script>
+      var statusEl = document.getElementById('status');
+      statusEl.addEventListener('selected-changed', setState);
+    </script>
+  </body>
+</html>
