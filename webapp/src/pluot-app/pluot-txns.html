@@ -17,7 +17,7 @@
   <template>
     <style include="iron-flex iron-flex-alignment">
       :host {
-        @apply --layout-vertical;
+        @apply(--layout-vertical);
       }
       .date {
         width: 64px;
@@ -51,7 +51,7 @@
       <template>
         <paper-item class$="layout horizontal is-selected-[[selected]]">
           <div class="date">[[_formatDate(txn.postDate)]]</div>
-          <div class="displayName flex">[[txn.originalDisplayName]]</div>
+          <div class="displayName flex">[[_formatDisplayName(txn)]]</div>
           <div class="amount">[[_formatAmount(txn.amount)]]</div>
           <div class="category">[[_formatCategory(txn)]]</div>
         </paper-item>
@@ -146,6 +146,15 @@
       }
       _formatAmount(amount) {
         return formatAmount(amount);
+      }
+      _formatDisplayName(txn) {
+        if (txn.userDisplayName != "") {
+          return txn.userDisplayName;
+        }
+        if (txn.displayName != "") {
+          return txn.displayName;
+        }
+        return txn.originalDisplayName;
       }
       _submitPatchReq() {
         this.$.patchAjax.generateRequest();
