@@ -72,7 +72,7 @@ func checkUpload(c context.Context, r *http.Request, u *user.User) (interface{},
 	}
 	uploadedTxns, err := parseTxns(req.CSV, req.Source)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed parsing csv: %v", err)
 	}
 	start, err := time.Parse("2006-01-02", req.Start)
 	if err != nil {
@@ -129,7 +129,7 @@ func createUpload(c context.Context, r *http.Request, u *user.User) (interface{}
 	}
 	uploadedTxns, err := parseTxns(req.CSV, req.Source)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed parsing csv: %v", err)
 	}
 	start, err := time.Parse("2006-01-02", req.Start)
 	if err != nil {
