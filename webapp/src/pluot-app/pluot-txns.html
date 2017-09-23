@@ -62,8 +62,8 @@
     </iron-list>
 
     <paper-dialog id="editDialog" class="layout vertical">
-      <span>[[selectedTxnIds.length]] transactions selected.</span>
-      <paper-input label="Description" value="{{editDisplayName}}"></paper-input>
+      <h2>[[selectedTxnIds.length]] transactions selected.</h2>
+      <paper-input autofocus label="Description" value="{{editDisplayName}}"></paper-input>
       <paper-dropdown-menu label="Category">
         <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{editCategory}}">
           <template is="dom-repeat" items="[[categories]]" as="category">
@@ -71,7 +71,7 @@
           </template>
         </paper-listbox>
       </paper-dropdown-menu>
-      <div class="layout horizontal end-justified">
+      <div class="actions">
         <paper-button dialog-dismiss>Cancel</paper-button>
         <paper-button dialog-confirm autofocus on-tap="_submitPatchReq">Accept</paper-button>
       </div>
