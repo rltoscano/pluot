@@ -45,9 +45,13 @@
         background-color: #583759;
       }
     </style>
+
     <pluot-globals id="globals" categories="{{categories}}"></pluot-globals>
+
     <iron-a11y-keys target="[[$.txnList]]" keys="[[_computeEditKeys(selectedTxnIds)]]" on-keys-pressed="edit" disabled></iron-a11y-keys>
+
     <paper-input id="queryInput" value="{{queryStr}}" hidden></paper-input>
+
     <iron-list
         class="flex"
         items="[[_filter(query, listResp.txns)]]"
@@ -66,8 +70,8 @@
       </template>
     </iron-list>
 
-    <paper-dialog id="editDialog" class="layout vertical">
-      <h2>[[selectedTxnIds.length]] transactions selected.</h2>
+    <paper-dialog id="editDialog" class="layout vertical" fit-into="[[$.txnList]]" modal>
+      <h2>[[selectedTxnIds.length]] Transactions Selected</h2>
       <paper-input autofocus label="Description" value="{{editDisplayName}}"></paper-input>
       <paper-dropdown-menu label="Category">
         <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{editCategory}}">
@@ -76,7 +80,7 @@
           </template>
         </paper-listbox>
       </paper-dropdown-menu>
-      <div class="actions">
+      <div class="buttons">
         <paper-button dialog-dismiss>Cancel</paper-button>
         <paper-button dialog-confirm autofocus on-tap="_submitPatchReq">Accept</paper-button>
       </div>
@@ -119,8 +123,14 @@
         };
       }
       edit() {
-        this.editDisplayName = "";
-        this.editCategory = null;
+        if (this.selectedTxnIds.length == 1) {
+          var selectedTxn = this.$.txnList.selectedItems[0];
+          this.editDisplayName = selectedTxn.userDisplayName || selectedTxn.displayName || selectedTxn.originalDisplayName;
+          this.editCategory = selectedTxn.userCategory || selectedTxn.category;
+        } else {
+          this.editDisplayName = "";
+          this.editCategory = null;
+        }
         this.$.editDialog.open();
       }
       search() {

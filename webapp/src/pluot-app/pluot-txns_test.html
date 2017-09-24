@@ -17,7 +17,7 @@
       }
       #container {
         display: flex;
-        flex-direction: column;
+        flex-direction: row;
         align-items: stretch;
         flex-grow: 1;
       }
@@ -227,7 +227,8 @@
       <paper-radio-button name="404">404 Error</paper-radio-button>
       <paper-radio-button name="500">500 Error</paper-radio-button>
     </paper-radio-group>
-    <div id="container"></div>
+    <div id="container">
+      <div>fooooooooooooooooooooooooooooooooooo</div></div>
     <script>
       var statusEl = document.getElementById('status');
       statusEl.addEventListener('selected-changed', setState);
