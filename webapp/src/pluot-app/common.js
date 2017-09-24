@@ -1,4 +1,7 @@
 function formatAmount(amount) {
+  if (amount == 0) {
+    return "$0.00";
+  }
   var amountStr = String(amount);
   return "$" + amountStr.substr(0, amountStr.length-2) + "." + amountStr.substr(-2);
 }
