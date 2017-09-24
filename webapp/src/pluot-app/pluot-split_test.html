@@ -8,11 +8,20 @@
     <link rel="import" href="/src/pluot-app/pluot-split.html">
     <style>
     </style>
+    <script>
+      function showEvent(evt) {
+        alert(JSON.stringify(evt.detail));
+      }
+    </script>
   </head>
   <body id="body">
     <pluot-split
+        id="split"
         split-txn='{"originalDisplayName": "hello world", "userDisplayName": "", "displayName": "", "amount": 10000 }'
         opened
         modal></pluot-split>
+    <script>
+      document.getElementById('split').addEventListener('split', showEvent);
+    </script>
   </body>
 </html>

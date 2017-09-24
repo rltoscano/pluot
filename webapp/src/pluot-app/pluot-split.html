@@ -47,7 +47,7 @@
     <pluot-globals id="globals"></pluot-globals>
 
     <h2 class="layout horizontal">
-      <div class="flex">[[_formatDisplayName(splitTxn)]]</div>
+      <div class="flex">[[_formatDisplayName(_splitTxn)]]</div>
       <div style="padding-left: 32px;">Remaining: [[_formatAmount(_remainingSplitAmount)]]</div>
     </h2>
     <paper-dialog-scrollable>
@@ -80,9 +80,10 @@
       static get properties() {
         return {
           splitTxn: { type: Object, value: null },
-          _uiSplits: { type: Array, value: [] },
           splits: { type: Array, computed: '_computeSplits(_uiSplits.*)', readOnly: true },
-          _remainingSplitAmount: { type: Number, computed: '_computeRemainingSplitAmount(splitTxn, splits)' },
+          _splitTxn: { type: Object, computed: '_computeSplitTxn(splitTxn)' },
+          _uiSplits: { type: Array, value: [] },
+          _remainingSplitAmount: { type: Number, computed: '_computeRemainingSplitAmount(_splitTxn, splits)' },
         };
       }
       _formatDisplayName(txn) {
@@ -96,15 +97,18 @@
       }
       _formatAmount(amount) { return formatAmount(amount); }
       _onSplitTap(evt) {
-        alert('wut');
+        this.dispatchEvent(
+            new CustomEvent(
+                'split',
+                {detail: {splitTxn: this.splitTxn, splits: this.splits}}));
+        this._uiSplits = [];
       }
-      _computeRemainingSplitAmount(splitTxn, splits) {
-        console.log('Splits: ' + JSON.stringify(splits));
-        if (splitTxn == null || typeof(splits) == 'undefined') {
+      _computeRemainingSplitAmount(_splitTxn, splits) {
+        if (_splitTxn == null || typeof(splits) == 'undefined') {
           return 0;
         }
         return splits.reduce(
-          (remaining, split) => remaining - split.amount, splitTxn.amount);
+          (remaining, split) => remaining - split.amount, _splitTxn.amount);
       }
       _onAddSplitTap(evt) {
         this.push(
@@ -117,11 +121,10 @@
         setTimeout(this.refit.bind(this), 0);
       }
       _computeSplits(_uiSplitsProp) {
-        console.log(_uiSplitsProp);
         return _uiSplitsProp.base.map(ui => ({
           displayName: ui.displayName,
           category: parseInt(ui.category),
-          amount: parseInt(ui.amount)*100,
+          amount: parseFloat(ui.amount) * 100,
         }));
       }
       _computeSplitButtonDisabled(_remainingSplitAmount, splits) {
@@ -131,6 +134,17 @@
       _onRemoveSplitTap(evt) {
         this.splice('_uiSplits', evt.currentTarget.dataset.index, 1);
         setTimeout(this.refit.bind(this), 0);
+      }
+      _computeSplitTxn(splitTxn) {
+        if (splitTxn == null) {
+          splitTxn = {
+            originalDisplayName: "hello world",
+            userDisplayName: "",
+            displayName: "",
+            amount: 0,
+          };
+        }
+        return splitTxn;
       }
     }
     window.customElements.define(PluotSplit.is, PluotSplit);

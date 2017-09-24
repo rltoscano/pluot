@@ -1,6 +1,7 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
 <link rel="import" href="../pluot-app/pluot-globals.html">
+<link rel="import" href="../pluot-app/pluot-split.html">
 
 <link rel="import" href="../../bower_components/iron-a11y-keys/iron-a11y-keys.html">
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
@@ -9,6 +10,7 @@
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
@@ -48,7 +50,8 @@
 
     <pluot-globals id="globals" categories="{{categories}}"></pluot-globals>
 
-    <iron-a11y-keys target="[[$.txnList]]" keys="[[_computeEditKeys(selectedTxnIds)]]" on-keys-pressed="edit" disabled></iron-a11y-keys>
+    <iron-a11y-keys target="[[$.txnList]]" keys="[[_computeEditKeys(selectedTxnIds)]]" on-keys-pressed="edit"></iron-a11y-keys>
+    <iron-a11y-keys target="[[$.txnList]]" keys="[[_computeSplitKeys(selectedTxnIds)]]" on-keys-pressed="split"></iron-a11y-keys>
 
     <paper-input id="queryInput" value="{{queryStr}}" hidden></paper-input>
 
@@ -86,6 +89,8 @@
       </div>
     </paper-dialog>
 
+    <pluot-split id="splitDialog" fit-into="[[$.txnList]]" modal on-split="_onSplitTxn"></pluot-split>
+
     <iron-ajax
         auto
         url="[[$.globals.urlPrefix]]txns"
@@ -120,6 +125,9 @@
           queryStr: { type: String, value: '' },
           query: { type: Object, computed: '_computeQuery(queryStr)' },
           listResp: { type: Object, value: { txns: [] } },
+          splitTxn: { type: Object, value: null },
+          splits: { type: Array, value: [ {displayName: "test", category: "3", amount: "-40" } ] },
+          remainingSplitAmount: { type: Number, computed: '_computeRemainingSplitAmount(splitTxn, splits)' },
         };
       }
       edit() {
@@ -137,10 +145,15 @@
         this.$.queryInput.value = "";
         this.$.queryInput.hidden = !this.$.queryInput.hidden;
       }
+      split() {
+        this.$.splitDialog.splitTxn = this.$.txnList.selectedItems[0];
+        this.$.splitDialog.open();
+      }
       _computeToolbar(selectedTxnIds) {
         return [
           { icon: 'image:edit', handler: 'edit', disabled: (selectedTxnIds.length == 0) },
           { icon: 'search', handler: 'search' },
+          { icon: 'communication:call-split', handler: 'split', disabled: (selectedTxnIds.length != 1) },
         ];
       }
       _computePatchReq(selectedTxnIds, editDisplayName, editCategory) {
@@ -158,9 +171,7 @@
           fields: fields,
         };
       }
-      _formatDate(str) {
-        return formatDate(str);
-      }
+      _formatDate(str) { return formatDate(str); }
       _formatCategory(txn) {
         var category = txn.category;
         if (txn.userCategory > 0) {
@@ -168,9 +179,7 @@
         }
         return this.$.globals.categoryName(category);
       }
-      _formatAmount(amount) {
-        return formatAmount(amount);
-      }
+      _formatAmount(amount) { return formatAmount(amount); }
       _formatDisplayName(txn) {
         if (txn.userDisplayName != "") {
           return txn.userDisplayName;
@@ -198,6 +207,9 @@
       }
       _computeEditKeys(selectedTxnIds) {
         return (selectedTxnIds.length == 0) ? "" : "e";
+      }
+      _computeSplitKeys(selectedTxnIds) {
+        return (selectedTxnIds.length != 1) ? "" : "s";
       }
       _filter(query, txns) {
         return txns.filter(txn => {
@@ -236,6 +248,9 @@
           // TODO(robert): Support searching by display name.
         });
         return query;
+      }
+      _onSplitTxn(evt) {
+        alert('wut');
       }
     }
     window.customElements.define(PluotTxns.is, PluotTxns);
