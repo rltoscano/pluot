@@ -40,12 +40,17 @@
         background-color: #583759;
         color: #fff;
       }
+      #queryInput {
+        --paper-input-container-input-color: #fff;
+        background-color: #583759;
+      }
     </style>
     <pluot-globals id="globals" categories="{{categories}}"></pluot-globals>
     <iron-a11y-keys target="[[$.txnList]]" keys="[[_computeEditKeys(selectedTxnIds)]]" on-keys-pressed="edit" disabled></iron-a11y-keys>
+    <paper-input id="queryInput" value="{{queryStr}}" hidden></paper-input>
     <iron-list
         class="flex"
-        items="[[listResp.txns]]"
+        items="[[_filter(query, listResp.txns)]]"
         as="txn"
         multi-selection
         id="txnList"
@@ -108,6 +113,9 @@
           selectedTxnIds: { type: Array, value: [] },
           editDisplayName: { type: String, value: "" },
           editCategory: { type: Number, value: null },
+          queryStr: { type: String, value: '' },
+          query: { type: Object, computed: '_computeQuery(queryStr)' },
+          listResp: { type: Object, value: { txns: [] } },
         };
       }
       edit() {
@@ -116,7 +124,8 @@
         this.$.editDialog.open();
       }
       search() {
-        alert('not ready yet');
+        this.$.queryInput.value = "";
+        this.$.queryInput.hidden = !this.$.queryInput.hidden;
       }
       _computeToolbar(selectedTxnIds) {
         return [
@@ -179,6 +188,44 @@
       }
       _computeEditKeys(selectedTxnIds) {
         return (selectedTxnIds.length == 0) ? "" : "e";
+      }
+      _filter(query, txns) {
+        return txns.filter(txn => {
+          if (query.categories.length > 0) {
+            var cat = (txn.userCategory != 0) ? txn.userCategory : txn.category;
+            if (!query.categories.includes(cat)) {
+              return false;
+            }
+          }
+          if (query.after != null && query.after >= txn.postDate.substr(0, 10)) {
+            return false;
+          }
+          if (query.before != null && query.before <= txn.postDate.substr(0, 10)) {
+            return false;
+          }
+          return true;
+        });
+      }
+      _computeQuery(queryStr) {
+        var tokens = queryStr.split(' ');
+        var query = {
+          displayName: "",
+          categories: [],
+          before: null,
+          after: null
+        };
+        tokens.forEach(token => {
+          if (token.startsWith('cat:')) {
+            query.categories.push(
+              this.$.globals.categoryCode(token.substr('cat:'.length)));
+          } else if (token.startsWith('after:')) {
+            query.after = token.substr('after:'.length);
+          } else if (token.startsWith('before:')) {
+            query.before = token.substr('before:'.length);;
+          }
+          // TODO(robert): Support searching by display name.
+        });
+        return query;
       }
     }
     window.customElements.define(PluotTxns.is, PluotTxns);

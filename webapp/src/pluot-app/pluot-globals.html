@@ -50,6 +50,10 @@
         categoryName(code) {
           return categories[code];
         }
+        categoryCode(displayName) {
+          var c = this.categories.find(c => c.displayName == displayName);
+          return c ? c.code : 0;
+        }
       }
       window.customElements.define(PluotGlobals.is, PluotGlobals);
     })();
