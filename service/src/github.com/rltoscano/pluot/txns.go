@@ -33,6 +33,25 @@ type PatchTxnsRequest struct {
 	Fields []string `json:"fields"`
 }
 
+// TxnSplit represents a part of a request to split a transaction. There may be
+// multiple splits
+type TxnSplit struct {
+	DisplayName string `json:"displayName"`
+	Category    int    `json:"category"`
+	Amount      int64  `json:"amount"`
+}
+
+// SplitTxnRequest represents a request to split a source transaction.
+type SplitTxnRequest struct {
+	SourceID int64      `json:"sourceId"`
+	Splits   []TxnSplit `json:"splits"`
+}
+
+// SplitTxnResponse contains the newly added split transactions.
+type SplitTxnResponse struct {
+	Txns []Txn `json:"txns"`
+}
+
 // listTxns lists the transactions in the database.
 func listTxns(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
 	txns, err := loadTxns(c, time.Time{}, time.Time{}, CategoryUnknown, false)
@@ -97,6 +116,50 @@ func patchTxns(c context.Context, r *http.Request, u *user.User) (interface{}, e
 		txns[i].ID = k.IntID()
 	}
 	return ListTxnsResponse{txns}, err
+}
+
+func splitTxn(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
+	req := SplitTxnRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, pihen.Error{http.StatusBadRequest, err.Error()}
+	}
+	if req.SourceID == 0 || len(req.Splits) == 0 {
+		return nil, pihen.Error{http.StatusBadRequest, "no input specified"}
+	}
+
+	var source Txn
+	sourceKey := datastore.NewKey(c, "Txn", "", req.SourceID, nil)
+	splits := make([]Txn, len(req.Splits))
+	datastore.RunInTransaction(c, func(tc context.Context) error {
+		if err := datastore.Get(tc, sourceKey, &source); err != nil {
+			// TODO(robert): Handle if source not found as client error.
+			return err
+		}
+		// TODO(robert): Sanity check splits. E.g. that they add up to the source.
+		splitKeys := make([]*datastore.Key, len(req.Splits))
+		for i, s := range req.Splits {
+			splits[i].PostDate = source.PostDate
+			splits[i].Amount = s.Amount
+			splits[i].UserDisplayName = s.DisplayName
+			splits[i].UserCategory = s.Category
+			splits[i].SplitSourceID = source.ID
+			splitKeys[i] = datastore.NewIncompleteKey(tc, "Txn", nil)
+		}
+		splitKeys, err := datastore.PutMulti(tc, splitKeys, &splits)
+		if err != nil {
+			return err
+		}
+		source.Splits = make([]int64, len(splitKeys))
+		for i, k := range splitKeys {
+			source.Splits[i] = k.IntID()
+			// Copy key into split for response.
+			splits[i].ID = k.IntID()
+		}
+		_, err = datastore.Put(tc, sourceKey, &source)
+		return err
+	}, nil)
+
+	return SplitTxnResponse{Txns: splits}, nil
 }
 
 func applyFields(source, dest *Txn, fields []string) error {

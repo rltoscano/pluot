@@ -69,6 +69,8 @@ type Txn struct {
 	Category            int       `json:"category"`
 	UserCategory        int       `json:"userCategory"`
 	UploadID            int64     `json:"uploadId"`
+	Splits              []int64   `json:"splits"`
+	SplitSourceID       int64     `json:"splitSourceId"`
 }
 
 // IsExpenseCategory returns whether the given category is an expense.

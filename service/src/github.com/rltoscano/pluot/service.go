@@ -26,6 +26,10 @@ func init() {
 				Methods: map[string]pihen.Method{http.MethodPatch: patchTxn},
 			},
 			{
+				URL:     "/svc/txns:split",
+				Methods: map[string]pihen.Method{http.MethodPost: splitTxn},
+			},
+			{
 				URL:     "/svc/uploads",
 				Methods: map[string]pihen.Method{http.MethodPost: createUpload},
 			},
