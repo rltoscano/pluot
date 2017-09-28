@@ -63,16 +63,56 @@
                 "uploadId":5644406560391168
               },
               {
-                "id":4965856756891648,
+                "id":1,
                 "postDate":"2017-08-28T07:00:00Z",
                 "amount":-1325,
                 "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"Garden Creamery",
+                "displayName":"Split Source",
                 "userDisplayName":"",
                 "note":"",
                 "category":3,
                 "userCategory":0,
-                "uploadId":5699257587728384
+                "uploadId":5699257587728384,
+                "splits": [2,3,4],
+              },
+              {
+                "id":2,
+                "postDate":"2017-08-28T07:00:00Z",
+                "amount":-1325,
+                "originalDisplayName":"SQ *GARDEN CREAMERY",
+                "displayName":"",
+                "userDisplayName":"Garden Creamery split 1",
+                "note":"",
+                "category":3,
+                "userCategory":2,
+                "uploadId":5699257587728384,
+                "splitSourceId": 1,
+              },
+              {
+                "id":3,
+                "postDate":"2017-08-28T07:00:00Z",
+                "amount":-1325,
+                "originalDisplayName":"SQ *GARDEN CREAMERY",
+                "displayName":"",
+                "userDisplayName":"Garden Creamery split 2",
+                "note":"",
+                "category":3,
+                "userCategory":5,
+                "uploadId":5699257587728384,
+                "splitSourceId": 1,
+              },
+              {
+                "id":4,
+                "postDate":"2017-08-28T07:00:00Z",
+                "amount":-1325,
+                "originalDisplayName":"SQ *GARDEN CREAMERY",
+                "displayName":"",
+                "userDisplayName":"Garden Creamery split 3",
+                "note":"",
+                "category":3,
+                "userCategory":3,
+                "uploadId":5699257587728384,
+                "splitSourceId": 1,
               },
               {
                 "id":4965856756891648,
@@ -91,48 +131,13 @@
                 "postDate":"2017-08-28T07:00:00Z",
                 "amount":-1325,
                 "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"Garden Creamery",
+                "displayName":"No splits",
                 "userDisplayName":"",
                 "note":"",
                 "category":3,
                 "userCategory":0,
-                "uploadId":5699257587728384
-              },
-              {
-                "id":4965856756891648,
-                "postDate":"2017-08-28T07:00:00Z",
-                "amount":-1325,
-                "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"Garden Creamery",
-                "userDisplayName":"",
-                "note":"",
-                "category":3,
-                "userCategory":0,
-                "uploadId":5699257587728384
-              },
-              {
-                "id":4965856756891648,
-                "postDate":"2017-08-28T07:00:00Z",
-                "amount":-1325,
-                "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"Garden Creamery",
-                "userDisplayName":"",
-                "note":"",
-                "category":3,
-                "userCategory":0,
-                "uploadId":5699257587728384
-              },
-              {
-                "id":4965856756891648,
-                "postDate":"2017-08-28T07:00:00Z",
-                "amount":-1325,
-                "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"Garden Creamery",
-                "userDisplayName":"",
-                "note":"",
-                "category":3,
-                "userCategory":0,
-                "uploadId":5699257587728384
+                "uploadId":5699257587728384,
+                "splits": [],
               },
               {
                 "id":4965856756891648,
@@ -227,8 +232,7 @@
       <paper-radio-button name="404">404 Error</paper-radio-button>
       <paper-radio-button name="500">500 Error</paper-radio-button>
     </paper-radio-group>
-    <div id="container">
-      <div>fooooooooooooooooooooooooooooooooooo</div></div>
+    <div id="container">fooooooooooooooooooooooooooooooooo</div>
     <script>
       var statusEl = document.getElementById('status');
       statusEl.addEventListener('selected-changed', setState);

@@ -1,6 +1,8 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
-<link rel="import" href="../pluot-app/pluot-globals.html">
+<link rel="import" href="../pluot-app/pluot-amount.html">
+<link rel="import" href="../pluot-app/pluot-category.html">
+<link rel="import" href="../pluot-app/pluot-format.html">
 
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
@@ -8,13 +10,9 @@
 <link rel="import" href="../../bower_components/paper-dialog-behavior/paper-dialog-behavior.html">
 <link rel="import" href="../../bower_components/paper-dialog-behavior/paper-dialog-shared-styles.html">
 <link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
-<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
-<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
-
-<script src="common.js"></script>
 
 <dom-module id="pluot-split">
   <template>
@@ -44,24 +42,16 @@
       }
     </style>
 
-    <pluot-globals id="globals"></pluot-globals>
-
     <h2 class="layout horizontal">
-      <div class="flex">[[_formatDisplayName(_splitTxn)]]</div>
+      <div class="flex">[[_formatDisplayName(splitTxn)]]</div>
       <div style="padding-left: 32px;">Remaining: [[_formatAmount(_remainingSplitAmount)]]</div>
     </h2>
     <paper-dialog-scrollable>
-      <template is="dom-repeat" items="{{_uiSplits}}">
+      <template is="dom-repeat" items="{{splits}}">
         <paper-item class="layout horizontal">
           <paper-input label="Name" class="flex" type="text" value="{{item.displayName}}" autofocus></paper-input>
-          <paper-dropdown-menu label="Category">
-            <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{item.category}}">
-              <template is="dom-repeat" items="[[$.globals.categories]]">
-                <paper-item code$="[[item.code]]">[[item.displayName]]</paper-item>
-              </template>
-            </paper-listbox>
-          </paper-dropdown-menu>
-          <paper-input label="Amount" class="splitamount" type="text" value="{{item.amount}}"></paper-input>
+          <pluot-category code="{{item.category}}"></pluot-category>
+          <pluot-amount class="splitamount" amount="{{item.amount}}"></pluot-amount>
           <paper-icon-button icon="close" on-tap="_onRemoveSplitTap" data-index$="[[index]]"></paper-icon-button>
         </paper-item>
       </template>
@@ -69,82 +59,34 @@
     </paper-dialog-scrollable>
     <div class="buttons">
       <paper-button dialog-dismiss>Cancel</paper-button>
-      <paper-button dialog-confirm on-tap="_onSplitTap" disabled$="[[_computeSplitButtonDisabled(_remainingSplitAmount, splits)]]">Split</paper-button>
+      <paper-button dialog-confirm disabled$="[[_computeSplitButtonDisabled(_remainingSplitAmount, splits.*)]]">Split</paper-button>
     </div>
 
   </template>
 
   <script>
-    class PluotSplit extends Polymer.mixinBehaviors([Polymer.PaperDialogBehavior], Polymer.Element) {
+    class PluotSplit extends PluotFormat(Polymer.mixinBehaviors([Polymer.PaperDialogBehavior], Polymer.Element)) {
       static get is() { return 'pluot-split'; }
       static get properties() {
         return {
-          splitTxn: { type: Object, value: null },
-          splits: { type: Array, computed: '_computeSplits(_uiSplits.*)', readOnly: true },
-          _splitTxn: { type: Object, computed: '_computeSplitTxn(splitTxn)' },
-          _uiSplits: { type: Array, value: [] },
-          _remainingSplitAmount: { type: Number, computed: '_computeRemainingSplitAmount(_splitTxn, splits)' },
+          splitTxn: { type: Object, value: { userDisplayName: "", amount: 0 } },
+          splits: { type: Array, notify: true, value: [] },
+          _remainingSplitAmount: { type: Number, computed: '_computeRemainingSplitAmount(splitTxn, splits.*)' },
         };
       }
-      _formatDisplayName(txn) {
-        if (txn.userDisplayName != "") {
-          return txn.userDisplayName;
-        }
-        if (txn.displayName != "") {
-          return txn.displayName;
-        }
-        return txn.originalDisplayName;
+      _computeRemainingSplitAmount(splitTxn, splitsProp) {
+        return splitsProp.base.reduce((remaining, split) => remaining - split.amount, splitTxn.amount);
       }
-      _formatAmount(amount) { return formatAmount(amount); }
-      _onSplitTap(evt) {
-        this.dispatchEvent(
-            new CustomEvent(
-                'split',
-                {detail: {splitTxn: this.splitTxn, splits: this.splits}}));
-        this._uiSplits = [];
-      }
-      _computeRemainingSplitAmount(_splitTxn, splits) {
-        if (_splitTxn == null || typeof(splits) == 'undefined') {
-          return 0;
-        }
-        return splits.reduce(
-          (remaining, split) => remaining - split.amount, _splitTxn.amount);
+      _computeSplitButtonDisabled(_remainingSplitAmount, splitsProp) {
+        return (_remainingSplitAmount != 0) || splitsProp.base.some(s => !s.displayName || !s.category || !s.amount);
       }
       _onAddSplitTap(evt) {
-        this.push(
-          '_uiSplits',
-          {
-            displayName: "",
-            category: "1",
-            amount: String(this._remainingSplitAmount / 100)
-          });
+        this.push('splits', { displayName: '', category: null, amount: this._remainingSplitAmount });
         setTimeout(this.refit.bind(this), 0);
-      }
-      _computeSplits(_uiSplitsProp) {
-        return _uiSplitsProp.base.map(ui => ({
-          displayName: ui.displayName,
-          category: parseInt(ui.category),
-          amount: parseFloat(ui.amount) * 100,
-        }));
-      }
-      _computeSplitButtonDisabled(_remainingSplitAmount, splits) {
-        return _remainingSplitAmount != 0 ||
-            splits.some(s => !s.displayName || !s.category || !s.amount);
       }
       _onRemoveSplitTap(evt) {
-        this.splice('_uiSplits', evt.currentTarget.dataset.index, 1);
+        this.splice('splits', evt.currentTarget.dataset.index, 1);
         setTimeout(this.refit.bind(this), 0);
-      }
-      _computeSplitTxn(splitTxn) {
-        if (splitTxn == null) {
-          splitTxn = {
-            originalDisplayName: "hello world",
-            userDisplayName: "",
-            displayName: "",
-            amount: 0,
-          };
-        }
-        return splitTxn;
       }
     }
     window.customElements.define(PluotSplit.is, PluotSplit);

@@ -1,0 +1,20 @@
+<html>
+  <head>
+    <title>pluot-edit test</title>
+    <script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
+    <link rel="import" href="/src/pluot-app/pluot-edit.html">
+    <style>
+    </style>
+  </head>
+  <body>
+    <pluot-edit id="edit" num-selected="7" txn='{"displayName": "Display Name", "category": 3}' opened modal></pluot-edit>
+    <script>
+      function onTxnChanged(evt) {
+        console.log('Txn: ' + JSON.stringify(evt.currentTarget.txn));
+      }
+      var edit = document.getElementById('edit');
+      edit.addEventListener('txn-changed', onTxnChanged);
+      //edit.open();
+    </script>
+  </body>
+</html>

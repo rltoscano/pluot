@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <title>pluot-amount test</title>
+    <script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
+    <link rel="import" href="/src/pluot-app/pluot-amount.html">
+    <style>
+    </style>
+  </head>
+  <body>
+    <pluot-amount id="amt" amount="10000"></pluot-amount>
+    <script>
+      function onAmountChanged(evt) {
+        console.log('Amount: ' + JSON.stringify(evt.detail.value));
+      }
+      document.getElementById('amt').addEventListener('amount-changed', onAmountChanged);
+    </script>
+  </body>
+</html>

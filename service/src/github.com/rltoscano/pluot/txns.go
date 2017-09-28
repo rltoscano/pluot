@@ -126,34 +126,95 @@ func splitTxn(c context.Context, r *http.Request, u *user.User) (interface{}, er
 	if req.SourceID == 0 || len(req.Splits) == 0 {
 		return nil, pihen.Error{http.StatusBadRequest, "no input specified"}
 	}
-
-	var source Txn
-	sourceKey := datastore.NewKey(c, "Txn", "", req.SourceID, nil)
-	splits := make([]Txn, len(req.Splits))
+	splits := make([]Txn, 0, len(req.Splits))
 	datastore.RunInTransaction(c, func(tc context.Context) error {
+		var source Txn
+		sourceKey := datastore.NewKey(c, "Txn", "", req.SourceID, nil)
 		if err := datastore.Get(tc, sourceKey, &source); err != nil {
 			// TODO(robert): Handle if source not found as client error.
 			return err
 		}
-		// TODO(robert): Sanity check splits. E.g. that they add up to the source.
-		splitKeys := make([]*datastore.Key, len(req.Splits))
-		for i, s := range req.Splits {
-			splits[i].PostDate = source.PostDate
-			splits[i].Amount = s.Amount
-			splits[i].UserDisplayName = s.DisplayName
-			splits[i].UserCategory = s.Category
-			splits[i].SplitSourceID = source.ID
-			splitKeys[i] = datastore.NewIncompleteKey(tc, "Txn", nil)
+		// Check that splits add up to source amount.
+		sum := int64(0)
+		for _, split := range req.Splits {
+			sum = sum + split.Amount
 		}
-		splitKeys, err := datastore.PutMulti(tc, splitKeys, &splits)
+		if sum != source.Amount {
+			return pihen.Error{
+				http.StatusBadRequest,
+				fmt.Sprintf("expected splits to add up to %v, but was %v", source.Amount, sum),
+			}
+		}
+		// Load existing splits (if any).
+		oldSplits := make([]Txn, len(source.Splits))
+		oldSplitKeys := make([]*datastore.Key, len(source.Splits))
+		for i, id := range source.Splits {
+			oldSplitKeys[i] = datastore.NewKey(tc, "Txn", "", id, nil)
+		}
+		if err := datastore.GetMulti(tc, oldSplitKeys, oldSplits); err != nil {
+			return fmt.Errorf("could not get existing splits %v for split source %v: %v", source.Splits, source.ID, err)
+		}
+		for i, k := range oldSplitKeys {
+			oldSplits[i].ID = k.IntID()
+		}
+		// Merge new transactions.
+		toDelete := make([]bool, len(oldSplits))
+		matches := make([]bool, len(req.Splits))
+		for i, oldSplit := range oldSplits {
+			match := false
+			for j, newSplit := range req.Splits {
+				if newSplit.Amount == oldSplit.Amount && newSplit.DisplayName == oldSplit.UserDisplayName && newSplit.Category == oldSplit.UserCategory {
+					match = true
+					matches[j] = true
+					break
+				}
+			}
+			toDelete[i] = !match
+		}
+		// Delete old unmatched splits.
+		deleteKeys := []*datastore.Key{}
+		for i, k := range oldSplitKeys {
+			if toDelete[i] {
+				deleteKeys = append(deleteKeys, k)
+			}
+		}
+		if err := datastore.DeleteMulti(tc, deleteKeys); err != nil {
+			return err
+		}
+		// Add new unmatched splits.
+		newSplits := []Txn{}
+		newSplitKeys := []*datastore.Key{}
+		for i, newSplit := range req.Splits {
+			if !matches[i] {
+				newSplits = append(newSplits, Txn{
+					PostDate:        source.PostDate,
+					Amount:          newSplit.Amount,
+					UserDisplayName: newSplit.DisplayName,
+					UserCategory:    newSplit.Category,
+					SplitSourceID:   source.ID,
+				})
+				newSplitKeys = append(newSplitKeys, datastore.NewIncompleteKey(tc, "Txn", nil))
+			}
+		}
+		newSplitKeys, err := datastore.PutMulti(tc, newSplitKeys, newSplits)
 		if err != nil {
 			return err
 		}
-		source.Splits = make([]int64, len(splitKeys))
-		for i, k := range splitKeys {
-			source.Splits[i] = k.IntID()
-			// Copy key into split for response.
-			splits[i].ID = k.IntID()
+		for i, k := range newSplitKeys {
+			newSplits[i].ID = k.IntID()
+		}
+		// Update source.
+		for i, oldSplit := range oldSplits {
+			if !toDelete[i] {
+				splits = append(splits, oldSplit)
+			}
+		}
+		for _, newSplit := range newSplits {
+			splits = append(splits, newSplit)
+		}
+		source.Splits = make([]int64, len(splits))
+		for i, split := range splits {
+			source.Splits[i] = split.ID
 		}
 		_, err = datastore.Put(tc, sourceKey, &source)
 		return err

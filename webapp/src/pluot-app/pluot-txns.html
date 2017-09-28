@@ -1,21 +1,19 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
+<link rel="import" href="../pluot-app/pluot-edit.html">
+<link rel="import" href="../pluot-app/pluot-format.html">
 <link rel="import" href="../pluot-app/pluot-globals.html">
+<link rel="import" href="../pluot-app/pluot-search.html">
 <link rel="import" href="../pluot-app/pluot-split.html">
 
 <link rel="import" href="../../bower_components/iron-a11y-keys/iron-a11y-keys.html">
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-icons/communication-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../../bower_components/iron-list/iron-list.html">
-<link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
-<link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
-<link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
-<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
-<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
-
-<script src="common.js"></script>
 
 <dom-module id="pluot-txns">
   <template>
@@ -42,158 +40,142 @@
         background-color: #583759;
         color: #fff;
       }
-      #queryInput {
-        --paper-input-container-input-color: #fff;
-        background-color: #583759;
-      }
     </style>
 
-    <pluot-globals id="globals" categories="{{categories}}"></pluot-globals>
+    <pluot-globals id="globals"></pluot-globals>
 
-    <iron-a11y-keys target="[[$.txnList]]" keys="[[_computeEditKeys(selectedTxnIds)]]" on-keys-pressed="edit"></iron-a11y-keys>
-    <iron-a11y-keys target="[[$.txnList]]" keys="[[_computeSplitKeys(selectedTxnIds)]]" on-keys-pressed="split"></iron-a11y-keys>
+    <iron-a11y-keys target="[[$.txnList]]" keys="[[_computeEditKeys(_selected.length)]]" on-keys-pressed="edit"></iron-a11y-keys>
+    <iron-a11y-keys target="[[$.txnList]]" keys="[[_computeSplitKeys(_selected.length)]]" on-keys-pressed="split"></iron-a11y-keys>
+    <iron-a11y-keys target="[[$.txnList]]" keys="/" on-keys-pressed="search"></iron-a11y-keys>
 
-    <paper-input id="queryInput" value="{{queryStr}}" hidden></paper-input>
+    <pluot-search id="search" query="{{query}}" hidden></pluot-search>
 
-    <iron-list
-        class="flex"
-        items="[[_filter(query, listResp.txns)]]"
-        as="txn"
-        multi-selection
-        id="txnList"
-        selection-enabled
-        on-selected-items-changed="_onSelectedItemsChanged">
+    <iron-list id="txnList" class="flex" items="[[_txnModel.filtered]]" multi-selection selection-enabled selected-items="{{_selected}}">
       <template>
         <paper-item class$="layout horizontal is-selected-[[selected]]">
-          <div class="date">[[_formatDate(txn.postDate)]]</div>
-          <div class="displayName flex">[[_formatDisplayName(txn)]]</div>
-          <div class="amount">[[_formatAmount(txn.amount)]]</div>
-          <div class="category">[[_formatCategory(txn)]]</div>
+          <div class="date">[[_formatDate(item.postDate)]]</div>
+          <div class="displayName flex">[[_formatDisplayName(item)]]</div>
+          <div class="splitbadge">
+            <template is="dom-if" if="[[item.splitSourceId]]">
+              <iron-icon icon="communication:call-split"></iron-icon>
+            </template>
+          </div>
+          <div class="amount">[[_formatAmount(item.amount)]]</div>
+          <div class="category">[[_formatCategory(item)]]</div>
         </paper-item>
       </template>
     </iron-list>
 
-    <paper-dialog id="editDialog" class="layout vertical" fit-into="[[$.txnList]]" modal>
-      <h2>[[selectedTxnIds.length]] Transactions Selected</h2>
-      <paper-input autofocus label="Description" value="{{editDisplayName}}"></paper-input>
-      <paper-dropdown-menu label="Category">
-        <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{editCategory}}">
-          <template is="dom-repeat" items="[[categories]]" as="category">
-            <paper-item code$="[[category.code]]">[[category.displayName]]</paper-item>
-          </template>
-        </paper-listbox>
-      </paper-dropdown-menu>
-      <div class="buttons">
-        <paper-button dialog-dismiss>Cancel</paper-button>
-        <paper-button dialog-confirm autofocus on-tap="_submitPatchReq">Accept</paper-button>
-      </div>
-    </paper-dialog>
+    <pluot-edit id="editDialog" fit-into="[[$.txnList]]" on-iron-overlay-closed="_onEditClosed" txn="{{_editTxn}}" num-selected="[[_selected.length]]"></pluot-edit>
+    <pluot-split id="splitDialog" fit-into="[[$.txnList]]" on-iron-overlay-closed="_onSplitClose" split-txn="[[_splitTxn]]" splits="{{_splits}}"></pluot-split>
 
-    <pluot-split id="splitDialog" fit-into="[[$.txnList]]" modal on-split="_onSplitTxn"></pluot-split>
-
-    <iron-ajax
-        auto
-        url="[[$.globals.urlPrefix]]txns"
-        handle-as="json"
-        last-response="{{listResp}}"></iron-ajax>
-    <iron-ajax
-        id="patchAjax"
-        url="[[$.globals.urlPrefix]]txns"
-        method="PATCH"
-        content-type="application/json"
-        body="[[patchReq]]"
-        handle-as="json"
-        on-response="_onPatchAjaxResponse"></iron-ajax>
+    <iron-ajax auto url="[[$.globals.urlPrefix]]txns" handle-as="json" last-response="{{listResp}}"></iron-ajax>
+    <iron-ajax id="patchAjax" url="[[$.globals.urlPrefix]]txns" method="PATCH" content-type="application/json" body="[[_computePatchReq(_selected.*, _editTxn)]]" handle-as="json" on-response="_onPatchAjaxResponse"></iron-ajax>
+    <iron-ajax id="splitAjax" url="[[$.globals.urlPrefix]]txns:split" method="POST" content-type="application/json" body="[[_computeSplitReq(_splitTxn, _splits.*)]]" handle-as="json" on-response="_onSplitResponse"></iron-ajax>
   </template>
   <script>
-    class PluotTxns extends Polymer.Element {
+    class PluotTxns extends PluotFormat(Polymer.Element) {
       static get is() { return 'pluot-txns'; }
       static get properties() {
         return {
-          toolbar: {
-            type: Array,
-            notify: true,
-            computed: '_computeToolbar(selectedTxnIds)'
-          },
-          patchReq: {
-            type: Object,
-            computed: '_computePatchReq(selectedTxnIds, editDisplayName, editCategory)'
-          },
-          selectedTxnIds: { type: Array, value: [] },
-          editDisplayName: { type: String, value: "" },
-          editCategory: { type: Number, value: null },
-          queryStr: { type: String, value: '' },
-          query: { type: Object, computed: '_computeQuery(queryStr)' },
+          toolbar: { type: Array, notify: true, computed: '_computeToolbar(_selected.length)' },
+          _txnModel: { type: Object, computed: '_computeTxnModel(query, listResp.txns.*)' },
+          _editTxn: { type: Object, value: { displayName: "", category: null } },
           listResp: { type: Object, value: { txns: [] } },
-          splitTxn: { type: Object, value: null },
-          splits: { type: Array, value: [ {displayName: "test", category: "3", amount: "-40" } ] },
-          remainingSplitAmount: { type: Number, computed: '_computeRemainingSplitAmount(splitTxn, splits)' },
+          _splitTxn: { type: Object, computed: '_computeSplitTxn(_selected.*, _txnModel)' },
+          _splits: { type: Array, value: [] },
+          _selected: { type: Array, value: [] },
         };
       }
-      edit() {
-        if (this.selectedTxnIds.length == 1) {
-          var selectedTxn = this.$.txnList.selectedItems[0];
-          this.editDisplayName = selectedTxn.userDisplayName || selectedTxn.displayName || selectedTxn.originalDisplayName;
-          this.editCategory = selectedTxn.userCategory || selectedTxn.category;
-        } else {
-          this.editDisplayName = "";
-          this.editCategory = null;
-        }
-        this.$.editDialog.open();
-      }
-      search() {
-        this.$.queryInput.value = "";
-        this.$.queryInput.hidden = !this.$.queryInput.hidden;
-      }
-      split() {
-        this.$.splitDialog.splitTxn = this.$.txnList.selectedItems[0];
-        this.$.splitDialog.open();
-      }
-      _computeToolbar(selectedTxnIds) {
+      static get observers() {
         return [
-          { icon: 'image:edit', handler: 'edit', disabled: (selectedTxnIds.length == 0) },
-          { icon: 'search', handler: 'search' },
-          { icon: 'communication:call-split', handler: 'split', disabled: (selectedTxnIds.length != 1) },
+          '_updateEditTxn(_selected.*)',
+          '_updateSplits(_splitTxn, _txnModel)',
         ];
       }
-      _computePatchReq(selectedTxnIds, editDisplayName, editCategory) {
+      edit() { this.$.editDialog.open(); }
+      search() {
+        this.$.search.reset();
+        this.$.search.hidden = !this.$.search.hidden;
+      }
+      split() { this.$.splitDialog.open(); }
+      _updateEditTxn(_selectedProp) {
+        var selected = _selectedProp.base;
+        if (selected.length == 1) {
+           this._editTxn = {
+             displayName: selected[0].userDisplayName || selected[0].displayName || selected[0].originalDisplayName,
+             category: selected[0].userCategory || selected[0].category,
+           }
+        } else {
+          this._editTxn = { displayName: "", category: null };
+        }
+      }
+      _updateSplits(_splitTxn, _txnModel) {
+        if (!_splitTxn.splits) {
+          this._splits = [];
+        } else {
+          this._splits =
+              _splitTxn.splits
+                  .map(id => _txnModel.txnById[id])
+                  .map(s => ({ displayName: s.userDisplayName, category: s.userCategory, amount: s.amount }));
+        }
+      }
+      _computeTxnModel(query, txnsProp) {
+        var txns = txnsProp.base;
+        var model = { txnById: {}, filtered: [] };
+        if (!txns) {
+          return model;
+        }
+        txns.forEach(t => {
+          model.txnById[t.id] = t;
+          if (this.$.search.filter(t)) {
+            model.filtered.push(t);
+          }
+        });
+        return model;
+      }
+      _computeToolbar(_selectedLength) {
+        return [
+          { icon: 'image:edit', handler: 'edit', disabled: (_selectedLength == 0) },
+          { icon: 'search', handler: 'search' },
+          { icon: 'communication:call-split', handler: 'split', disabled: (_selectedLength != 1) },
+        ];
+      }
+      _computePatchReq(_selectedProp, _editTxn) {
         var fields = [];
-        if (typeof(editDisplayName) != 'undefined' && editDisplayName != '') {
+        if (_editTxn.displayName) {
           fields.push('userDisplayName');
         }
-        if (editCategory > 0) {
+        if (_editTxn.category) {
           fields.push('userCategory');
-          editCategory = parseInt(editCategory);
         }
         return {
-          ids: selectedTxnIds,
-          txn: { userDisplayName: editDisplayName, userCategory: editCategory },
+          ids: _selectedProp.base.map(t => t.id),
+          txn: { userDisplayName: _editTxn.displayName, userCategory: _editTxn.category },
           fields: fields,
         };
       }
-      _formatDate(str) { return formatDate(str); }
-      _formatCategory(txn) {
-        var category = txn.category;
-        if (txn.userCategory > 0) {
-          category = txn.userCategory;
+      _computeEditKeys(_selectedLength) { return (_selectedLength == 0) ? "" : "e"; }
+      _computeSplitKeys(_selectedLength) { return (_selectedLength != 1) ? "" : "s"; }
+      _computeSplitTxn(_selectedProp, _txnModel) {
+        if (_selectedProp.base.length != 1) {
+          return { userDisplayName: "", amount: 0 };
         }
-        return this.$.globals.categoryName(category);
-      }
-      _formatAmount(amount) { return formatAmount(amount); }
-      _formatDisplayName(txn) {
-        if (txn.userDisplayName != "") {
-          return txn.userDisplayName;
+        var selectedTxn = _selectedProp.base[0];
+        if (!selectedTxn.splitSourceId) {
+          return selectedTxn
+        } else {
+          return _txnModel.txnById[selectedTxn.splitSourceId];;
         }
-        if (txn.displayName != "") {
-          return txn.displayName;
+      }
+      _computeSplitReq(_splitTxn, _splitsProp) {
+        return { sourceId: _splitTxn.id, splits: _splitsProp.base };
+      }
+      _formatCategory(txn) { return this.$.globals.categoryName(txn.userCategory || txn.category); }
+      _onEditClosed(evt) {
+        if (evt.detail.confirmed) {
+          this.$.patchAjax.generateRequest();
         }
-        return txn.originalDisplayName;
-      }
-      _submitPatchReq() {
-        this.$.patchAjax.generateRequest();
-      }
-      _onSelectedItemsChanged(evt) {
-        this.selectedTxnIds = evt.currentTarget.selectedItems.map(t => t.id);
       }
       _onPatchAjaxResponse(evt) {
         for (var i = 0; i < this.listResp.txns.length; i++) {
@@ -205,52 +187,14 @@
         }
         this.$.txnList.clearSelection();
       }
-      _computeEditKeys(selectedTxnIds) {
-        return (selectedTxnIds.length == 0) ? "" : "e";
+      _onSplitClose(evt) {
+        if (evt.detail.confirmed) {
+          this.$.splitAjax.generateRequest();
+        }
       }
-      _computeSplitKeys(selectedTxnIds) {
-        return (selectedTxnIds.length != 1) ? "" : "s";
-      }
-      _filter(query, txns) {
-        return txns.filter(txn => {
-          if (query.categories.length > 0) {
-            var cat = (txn.userCategory != 0) ? txn.userCategory : txn.category;
-            if (!query.categories.includes(cat)) {
-              return false;
-            }
-          }
-          if (query.after != null && query.after >= txn.postDate.substr(0, 10)) {
-            return false;
-          }
-          if (query.before != null && query.before <= txn.postDate.substr(0, 10)) {
-            return false;
-          }
-          return true;
-        });
-      }
-      _computeQuery(queryStr) {
-        var tokens = queryStr.split(' ');
-        var query = {
-          displayName: "",
-          categories: [],
-          before: null,
-          after: null
-        };
-        tokens.forEach(token => {
-          if (token.startsWith('cat:')) {
-            query.categories.push(
-              this.$.globals.categoryCode(token.substr('cat:'.length)));
-          } else if (token.startsWith('after:')) {
-            query.after = token.substr('after:'.length);
-          } else if (token.startsWith('before:')) {
-            query.before = token.substr('before:'.length);;
-          }
-          // TODO(robert): Support searching by display name.
-        });
-        return query;
-      }
-      _onSplitTxn(evt) {
-        alert('wut');
+      _onSplitResponse(evt) {
+        alert('split done');
+        // TODO(robert): Apply changes to model.
       }
     }
     window.customElements.define(PluotTxns.is, PluotTxns);

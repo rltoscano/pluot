@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <title>pluot-category test</title>
+    <script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
+    <link rel="import" href="/src/pluot-app/pluot-category.html">
+    <style>
+    </style>
+  </head>
+  <body>
+    <pluot-category id="cat" code="3"></pluot-category>
+    <script>
+      function onCodeChanged(evt) {
+        console.log('Code: ' + JSON.stringify(evt.detail.value));
+      }
+      document.getElementById('cat').addEventListener('code-changed', onCodeChanged);
+    </script>
+  </body>
+</html>

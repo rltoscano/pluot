@@ -1,0 +1,76 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<link rel="import" href="../pluot-app/pluot-globals.html">
+
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+
+<dom-module id="pluot-search">
+  <template>
+    <style>
+      paper-input {
+        --paper-input-container-input-color: #fff;
+        background-color: #583759;
+      }
+    </style>
+
+    <pluot-globals id="globals"></pluot-globals>
+
+    <paper-input label="Search (e.g. cat:Groceries after:2017-08-21)" value="{{_queryStr}}"></paper-input>
+
+  </template>
+
+  <script>
+    class PluotSearch extends Polymer.Element {
+      static get is() { return 'pluot-search'; }
+      static get properties() {
+        return {
+          query: { type: Object, computed: '_computeQuery(_queryStr)', notify: true },
+          _queryStr: { type: String, value: '' },
+        };
+      }
+      reset() {
+        this._queryStr = '';
+      }
+      filter(txn) {
+        if (txn.splits && txn.splits.length > 0) { // Hide split sources.
+          return false;
+        }
+        if (this.query.categories.length > 0) {
+          var cat = (txn.userCategory != 0) ? txn.userCategory : txn.category;
+          if (!this.query.categories.includes(cat)) {
+            return false;
+          }
+        }
+        if (this.query.after != null && this.query.after >= txn.postDate.substr(0, 10)) {
+          return false;
+        }
+        if (this.query.before != null && this.query.before <= txn.postDate.substr(0, 10)) {
+          return false;
+        }
+        return true;
+      }
+      _computeQuery(_queryStr) {
+        var tokens = _queryStr.split(' ');
+        var query = {
+          displayName: "",
+          categories: [],
+          before: null,
+          after: null
+        };
+        tokens.forEach(token => {
+          if (token.startsWith('cat:')) {
+            query.categories.push(
+              this.$.globals.categoryCode(token.substr('cat:'.length)));
+          } else if (token.startsWith('after:')) {
+            query.after = token.substr('after:'.length);
+          } else if (token.startsWith('before:')) {
+            query.before = token.substr('before:'.length);;
+          }
+          // TODO(robert): Support searching by display name.
+        });
+        return query;
+      }
+    }
+    window.customElements.define(PluotSearch.is, PluotSearch);
+  </script>
+</dom-module>

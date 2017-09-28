@@ -1,0 +1,31 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+
+<dom-module id="pluot-amount">
+  <template>
+    <paper-input label="Amount" type="text" value="{{_model}}"></paper-input>
+  </template>
+
+  <script>
+    class PluotAmount extends Polymer.Element {
+      static get is() { return 'pluot-amount'; }
+      static get properties() {
+        return {
+          amount: { type: Number, notify: true, value: 0, observer: '_observeAmount' },
+          _model: { type: String, value: "0", observer: '_observeModel' },
+        };
+      }
+      _observeAmount(newValue) {
+        this._model = (newValue === NaN) ? '' : String(newValue / 100);
+      }
+      _observeModel(newValue) {
+        var f = parseFloat(newValue);
+        if (!isNaN(f)) {
+          this.amount = parseInt(f * 100);
+        }
+      }
+    }
+    window.customElements.define(PluotAmount.is, PluotAmount);
+  </script>
+</dom-module>

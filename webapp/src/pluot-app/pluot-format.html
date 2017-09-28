@@ -1,0 +1,23 @@
+<script>
+
+// Mixin that provides methods to format data.
+PluotFormat = function(superClass) {
+  return class extends superClass {
+    _formatAmount(amount) {
+      if (amount == 0) {
+        return "$0.00";
+      }
+      var amountStr = String(amount);
+      return "$" + amountStr.substr(0, amountStr.length-2) + "." + amountStr.substr(-2);
+    }
+    _formatDate(str) {
+      var d = new Date(Date.parse(str));
+      return d.toLocaleString('en-US', { month: 'short', day: 'numeric' });
+    }
+    _formatDisplayName(txn) {
+      return txn.userDisplayName || txn.displayName || txn.originalDisplayName;
+    }
+  }
+}
+
+</script>
