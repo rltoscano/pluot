@@ -127,7 +127,7 @@ func splitTxn(c context.Context, r *http.Request, u *user.User) (interface{}, er
 		return nil, pihen.Error{http.StatusBadRequest, "no input specified"}
 	}
 	splits := make([]Txn, 0, len(req.Splits))
-	datastore.RunInTransaction(c, func(tc context.Context) error {
+	err := datastore.RunInTransaction(c, func(tc context.Context) error {
 		var source Txn
 		sourceKey := datastore.NewKey(c, "Txn", "", req.SourceID, nil)
 		if err := datastore.Get(tc, sourceKey, &source); err != nil {
@@ -218,8 +218,10 @@ func splitTxn(c context.Context, r *http.Request, u *user.User) (interface{}, er
 		}
 		_, err = datastore.Put(tc, sourceKey, &source)
 		return err
-	}, nil)
-
+	}, &datastore.TransactionOptions{XG: true})
+	if err != nil {
+		return nil, err
+	}
 	return SplitTxnResponse{Txns: splits}, nil
 }
 
