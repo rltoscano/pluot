@@ -71,6 +71,10 @@ func computeAggregation(c context.Context, r *http.Request, u *user.User) (inter
 	currMonth := start
 	monthAgg := MonthAgg{Month: monthStr(currMonth)}
 	for _, t := range txns {
+		if len(t.Splits) > 0 {
+			// Don't count split transactions.
+			continue
+		}
 		// Totals.
 		cat := t.Category
 		if t.UserCategory > 0 {

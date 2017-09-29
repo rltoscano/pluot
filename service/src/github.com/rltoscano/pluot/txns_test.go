@@ -115,6 +115,9 @@ func TestSingleSplit(t *testing.T) {
 	if len(splitResp.Txns) != 1 {
 		t.Fatalf("Expected 1 split, but got %v", len(splitResp.Txns))
 	}
+	if splitResp.Txns[0].SplitSourceID != 1 {
+		t.Fatalf("Expected split to have source ID 1, but was %v", splitResp.Txns[0].SplitSourceID)
+	}
 }
 
 func TestResplit(t *testing.T) {
@@ -128,12 +131,12 @@ func TestResplit(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Add split 1.
-	split1 := Txn{UserDisplayName: "split1", UserCategory: 4, Amount: 400}
+	split1 := Txn{UserDisplayName: "split1", UserCategory: 4, Amount: 400, SplitSourceID: 1}
 	if _, err = datastore.Put(c, datastore.NewKey(c, "Txn", "", 2, nil), &split1); err != nil {
 		t.Fatal(err)
 	}
 	// Add split 2.
-	split2 := Txn{UserDisplayName: "split2", UserCategory: 5, Amount: 600}
+	split2 := Txn{UserDisplayName: "split2", UserCategory: 5, Amount: 600, SplitSourceID: 1}
 	if _, err = datastore.Put(c, datastore.NewKey(c, "Txn", "", 3, nil), &split2); err != nil {
 		t.Fatal(err)
 	}
@@ -170,10 +173,10 @@ func TestResplit(t *testing.T) {
 		existing = splitResp.Txns[1]
 		newTxn = splitResp.Txns[0]
 	}
-	if existing.ID != 2 || existing.UserDisplayName != "split1" || existing.UserCategory != 4 || existing.Amount != 400 {
+	if existing.ID != 2 || existing.UserDisplayName != "split1" || existing.UserCategory != 4 || existing.Amount != 400 || existing.SplitSourceID != 1 {
 		t.Fatal("Existing transaction unexpectedly modified.")
 	}
-	if newTxn.UserDisplayName != "split3" || newTxn.UserCategory != 7 || newTxn.Amount != 600 {
+	if newTxn.UserDisplayName != "split3" || newTxn.UserCategory != 7 || newTxn.Amount != 600 || newTxn.SplitSourceID != 1 {
 		t.Fatal("New transaction has unexpected value.")
 	}
 }

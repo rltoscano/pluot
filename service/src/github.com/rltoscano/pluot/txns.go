@@ -134,6 +134,7 @@ func splitTxn(c context.Context, r *http.Request, u *user.User) (interface{}, er
 			// TODO(robert): Handle if source not found as client error.
 			return err
 		}
+		source.ID = sourceKey.IntID()
 		// Check that splits add up to source amount.
 		sum := int64(0)
 		for _, split := range req.Splits {
