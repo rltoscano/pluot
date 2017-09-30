@@ -70,7 +70,7 @@
     <pluot-split id="splitDialog" fit-into="[[$.txnList]]" on-iron-overlay-closed="_onSplitClose" split-txn="[[_splitTxn]]" splits="{{_splits}}"></pluot-split>
 
     <iron-ajax auto url="[[$.globals.urlPrefix]]txns" handle-as="json" last-response="{{listResp}}"></iron-ajax>
-    <iron-ajax id="patchAjax" url="[[$.globals.urlPrefix]]txns" method="PATCH" content-type="application/json" body="[[_computePatchReq(_selected.*, _editTxn)]]" handle-as="json" on-response="_onPatchAjaxResponse"></iron-ajax>
+    <iron-ajax id="patchAjax" url="[[$.globals.urlPrefix]]txns" method="PATCH" content-type="application/json" body="[[_computePatchReq(_selected, _editTxn.*)]]" handle-as="json" on-response="_onPatchAjaxResponse"></iron-ajax>
     <iron-ajax id="splitAjax" url="[[$.globals.urlPrefix]]txns:split" method="POST" content-type="application/json" body="[[_computeSplitReq(_splitTxn, _splits.*)]]" handle-as="json" on-response="_onSplitResponse"></iron-ajax>
   </template>
   <script>
@@ -100,15 +100,14 @@
       }
       split() { this.$.splitDialog.open(); }
       _updateEditTxn(_selectedProp) {
-        var selected = _selectedProp.base;
-        if (selected.length == 1) {
-           this._editTxn = {
-             displayName: selected[0].userDisplayName || selected[0].displayName || selected[0].originalDisplayName,
-             category: selected[0].userCategory || selected[0].category,
-           }
-        } else {
-          this._editTxn = { displayName: "", category: null };
+        var displayName = '';
+        var category = null;
+        if (_selectedProp.base.length == 1) {
+          var t = _selectedProp.base[0];
+          displayName = t.userDisplayName || t.displayName || t.originalDisplayName;
+          category = t.userCategory || t.category;
         }
+        this._editTxn = { displayName: displayName, category: category };
       }
       _updateSplits(_splitTxn, _txnModel) {
         if (!_splitTxn.splits) {
@@ -141,8 +140,9 @@
           { icon: 'communication:call-split', handler: 'split', disabled: (_selectedLength != 1) },
         ];
       }
-      _computePatchReq(_selectedProp, _editTxn) {
+      _computePatchReq(_selected, _editTxn) {
         var fields = [];
+        _editTxn = _editTxn.base;
         if (_editTxn.displayName) {
           fields.push('userDisplayName');
         }
@@ -150,7 +150,7 @@
           fields.push('userCategory');
         }
         return {
-          ids: _selectedProp.base.map(t => t.id),
+          ids: _selected.map(t => t.id),
           txn: { userDisplayName: _editTxn.displayName, userCategory: _editTxn.category },
           fields: fields,
         };

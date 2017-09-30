@@ -3,18 +3,36 @@
     <title>pluot-edit test</title>
     <script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
     <link rel="import" href="/src/pluot-app/pluot-edit.html">
-    <style>
-    </style>
+    <!-- Ensure Web Animations polyfill is loaded since neon-animation 2.0 doesn't import it -->
+    <link rel="import" href="/bower_components/neon-animation/web-animations.html">
+    <script src="../../bower_components/web-component-tester/browser.js"></script>
   </head>
   <body>
-    <pluot-edit id="edit" num-selected="7" txn='{"displayName": "Display Name", "category": 3}' opened modal></pluot-edit>
+
+    <test-fixture id="PopulatedDialog">
+      <template>
+        <pluot-edit txn='{"displayName": "", "category": null}'></pluot-edit>
+      </template>
+    </test-fixture>
+
     <script>
-      function onTxnChanged(evt) {
-        console.log('Txn: ' + JSON.stringify(evt.currentTarget.txn));
-      }
-      var edit = document.getElementById('edit');
-      edit.addEventListener('txn-changed', onTxnChanged);
-      //edit.open();
+      suite('pluot-category', function() {
+
+        test('unset code', function(done) {
+          var el = fixture('PopulatedDialog');
+          assert.equal(el.txn.category, null);
+          var cat = el.shadowRoot.querySelector('pluot-category');
+          assert.equal(cat.code, null);
+          // Set just a new category, make sure pluot-category updates.
+          el.set('txn.category', 4);
+          flush(function() {
+            assert.equal(cat.code, 4);
+            done();
+          });
+        });
+
+      });
+
     </script>
   </body>
 </html>

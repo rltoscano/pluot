@@ -5,16 +5,56 @@
     <link rel="import" href="/src/pluot-app/pluot-category.html">
     <!-- Ensure Web Animations polyfill is loaded since neon-animation 2.0 doesn't import it -->
     <link rel="import" href="/bower_components/neon-animation/web-animations.html">
-    <style>
-    </style>
+    <script src="../../bower_components/web-component-tester/browser.js"></script>
   </head>
   <body>
-    <pluot-category id="cat" code="3"></pluot-category>
+
+    <test-fixture id="UnsetCode">
+      <template>
+        <pluot-category></pluot-category>
+      </template>
+    </test-fixture>
+
+    <test-fixture id="CodeSet">
+      <template>
+        <pluot-category code="5"></pluot-category>
+      </template>
+    </test-fixture>
+
+    <pluot-category></pluot-category>
+
     <script>
-      function onCodeChanged(evt) {
-        console.log('Code: ' + JSON.stringify(evt.detail.value));
-      }
-      document.getElementById('cat').addEventListener('code-changed', onCodeChanged);
+      suite('pluot-category', function() {
+
+        test('unset code', function(done) {
+          var el = fixture('UnsetCode');
+          assert.equal(el.code, null);
+          var elShadowRoot = el.shadowRoot;
+          var listbox = elShadowRoot.querySelector('paper-dropdown-menu > paper-listbox');
+          assert.equal(listbox.selected, null);
+          // Set a new value, make sure listbox updates.
+          el.code = 4;
+          assert.equal(listbox.selected, '4');
+          setTimeout(function() {
+            assert.equal(listbox.selectedItem.textContent, 'Groceries');
+            done();
+          }, 0);
+        });
+
+        test('already set code', function(done) {
+          var el = fixture('CodeSet');
+          assert.equal(el.code, 5);
+          assert.equal(typeof(el.code), 'number');
+          var elShadowRoot = el.shadowRoot;
+          var listbox = elShadowRoot.querySelector('paper-dropdown-menu > paper-listbox');
+          assert.equal(listbox.selected, '5');
+          setTimeout(function() {
+            assert.equal(listbox.selectedItem.textContent, 'Lifestyle');
+            done();
+          }, 0);
+        });
+
+      });
     </script>
   </body>
 </html>

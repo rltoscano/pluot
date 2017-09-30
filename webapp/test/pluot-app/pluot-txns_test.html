@@ -1,23 +1,22 @@
-<!doctype html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
     <title>pluot-txns test</title>
     <script src="/bower_components/webcomponentsjs/webcomponents-loader.js"></script>
-    <script src="/bower_components/web-component-tester/browser.js"></script>
-    <link rel="import" href="/src/pluot-app/pluot-txns.html">
-    <link rel="import" href="/bower_components/paper-radio-group/paper-radio-group.html">
-    <link rel="import" href="/bower_components/paper-radio-button/paper-radio-button.html">
+    <script src="../../bower_components/web-component-tester/browser.js"></script>
+    <!-- Ensure Web Animations polyfill is loaded since neon-animation 2.0 doesn't import it -->
+    <link rel="import" href="/bower_components/neon-animation/web-animations.html">
+    <link rel="import" href="../../src/pluot-app/pluot-txns.html">
+    <link rel="import" href="../../bower_components/paper-radio-group/paper-radio-group.html">
+    <link rel="import" href="../../bower_components/paper-radio-button/paper-radio-button.html">
     <style>
       body {
         display: flex;
         flex-direction: column;
         align-items: stretch;
       }
-      #container {
+      test-fixture {
         display: flex;
-        flex-direction: row;
+        flex-direction: column;
         align-items: stretch;
         flex-grow: 1;
       }
@@ -26,216 +25,271 @@
       }
     </style>
     <script>
-      var server = sinon.fakeServer.create();
-      server.autoRespond = true;
-      function setState(evt) {
-        var status = parseInt(evt.currentTarget.selected);
-        var body;
-        if (status >= 500) {
-          body = 'Something bad happened on the server.';
-        } else if (status >= 400) {
-          body = 'Some kind of 400 error';
-        } else if (status >= 200) {
-          body = JSON.stringify({
-            txns: [
-              {
-                "id":6513969128800256,
-                "postDate":"2017-08-30T07:00:00Z",
-                "amount":-1198,
-                "originalDisplayName":"HLU*Hulu 86506337-U",
-                "displayName":"Hulu",
-                "userDisplayName":"",
-                "note":"",
-                "category":5,
-                "userCategory":0,
-                "uploadId":5699257587728384
-              },
-              {
-                "id":5144752345317376,
-                "postDate":"2017-08-29T07:00:00Z",
-                "amount":30000,
-                "originalDisplayName":"VENMO CASHOUT XXXXX6353 ROBERT TOSCANO",
-                "displayName":"",
-                "userDisplayName":"",
-                "note":"",
-                "category":1,
-                "userCategory":16,
-                "uploadId":5644406560391168
-              },
-              {
-                "id":1,
-                "postDate":"2017-08-28T07:00:00Z",
-                "amount":-1325,
-                "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"Split Source",
-                "userDisplayName":"",
-                "note":"",
-                "category":3,
-                "userCategory":0,
-                "uploadId":5699257587728384,
-                "splits": [2,3,4],
-              },
-              {
-                "id":2,
-                "postDate":"2017-08-28T07:00:00Z",
-                "amount":-1325,
-                "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"",
-                "userDisplayName":"Garden Creamery split 1",
-                "note":"",
-                "category":3,
-                "userCategory":2,
-                "uploadId":5699257587728384,
-                "splitSourceId": 1,
-              },
-              {
-                "id":3,
-                "postDate":"2017-08-28T07:00:00Z",
-                "amount":-1325,
-                "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"",
-                "userDisplayName":"Garden Creamery split 2",
-                "note":"",
-                "category":3,
-                "userCategory":5,
-                "uploadId":5699257587728384,
-                "splitSourceId": 1,
-              },
-              {
-                "id":4,
-                "postDate":"2017-08-28T07:00:00Z",
-                "amount":-1325,
-                "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"",
-                "userDisplayName":"Garden Creamery split 3",
-                "note":"",
-                "category":3,
-                "userCategory":3,
-                "uploadId":5699257587728384,
-                "splitSourceId": 1,
-              },
-              {
-                "id":4965856756891648,
-                "postDate":"2017-08-28T07:00:00Z",
-                "amount":-1325,
-                "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"Garden Creamery",
-                "userDisplayName":"",
-                "note":"",
-                "category":3,
-                "userCategory":0,
-                "uploadId":5699257587728384
-              },
-              {
-                "id":4965856756891648,
-                "postDate":"2017-08-28T07:00:00Z",
-                "amount":-1325,
-                "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"No splits",
-                "userDisplayName":"",
-                "note":"",
-                "category":3,
-                "userCategory":0,
-                "uploadId":5699257587728384,
-                "splits": [],
-              },
-              {
-                "id":4965856756891648,
-                "postDate":"2017-08-28T07:00:00Z",
-                "amount":-1325,
-                "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"Garden Creamery",
-                "userDisplayName":"",
-                "note":"",
-                "category":3,
-                "userCategory":0,
-                "uploadId":5699257587728384
-              },
-              {
-                "id":4965856756891648,
-                "postDate":"2017-08-28T07:00:00Z",
-                "amount":-1325,
-                "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"Garden Creamery",
-                "userDisplayName":"",
-                "note":"",
-                "category":3,
-                "userCategory":0,
-                "uploadId":5699257587728384
-              },
-              {
-                "id":4965856756891648,
-                "postDate":"2017-08-28T07:00:00Z",
-                "amount":-1325,
-                "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"Garden Creamery",
-                "userDisplayName":"",
-                "note":"",
-                "category":3,
-                "userCategory":0,
-                "uploadId":5699257587728384
-              },
-              {
-                "id":4965856756891648,
-                "postDate":"2017-08-28T07:00:00Z",
-                "amount":-1325,
-                "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"Garden Creamery",
-                "userDisplayName":"",
-                "note":"",
-                "category":3,
-                "userCategory":0,
-                "uploadId":5699257587728384
-              },
-              {
-                "id":4965856756891648,
-                "postDate":"2017-08-28T07:00:00Z",
-                "amount":-1325,
-                "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"Garden Creamery",
-                "userDisplayName":"",
-                "note":"",
-                "category":3,
-                "userCategory":0,
-                "uploadId":5699257587728384
-              },
-              {
-                "id":4965856756891648,
-                "postDate":"2017-08-28T07:00:00Z",
-                "amount":-1325,
-                "originalDisplayName":"SQ *GARDEN CREAMERY",
-                "displayName":"Garden Creamery",
-                "userDisplayName":"",
-                "note":"",
-                "category":3,
-                "userCategory":0,
-                "uploadId":5699257587728384
-              }
-            ]
-          });
-        } else {
-          alert('Problem in test.')
-        }
-        server.respondWith(
-          'GET',
-          '/svc/txns',
-          [ status, { 'Content-Type': 'application/json' }, body ]
-        );
-        var container = document.getElementById('container');
-        container.appendChild(document.createElement('pluot-txns'));
-      }
+      // server.autoRespond = true;
+      // function setState(evt) {
+      //   var status = parseInt(evt.currentTarget.selected);
+      //   var body;
+      //   if (status >= 500) {
+      //     body = 'Something bad happened on the server.';
+      //   } else if (status >= 400) {
+      //     body = 'Some kind of 400 error';
+      //   } else if (status >= 200) {
+      //     body = JSON.stringify({
+      //       txns: [
+      //         {
+      //           "id":6513969128800256,
+      //           "postDate":"2017-08-30T07:00:00Z",
+      //           "amount":-1198,
+      //           "originalDisplayName":"HLU*Hulu 86506337-U",
+      //           "displayName":"Hulu",
+      //           "userDisplayName":"",
+      //           "note":"",
+      //           "category":5,
+      //           "userCategory":0,
+      //           "uploadId":5699257587728384
+      //         },
+      //         {
+      //           "id":5144752345317376,
+      //           "postDate":"2017-08-29T07:00:00Z",
+      //           "amount":30000,
+      //           "originalDisplayName":"VENMO CASHOUT XXXXX6353 ROBERT TOSCANO",
+      //           "displayName":"",
+      //           "userDisplayName":"",
+      //           "note":"",
+      //           "category":1,
+      //           "userCategory":16,
+      //           "uploadId":5644406560391168
+      //         },
+      //         {
+      //           "id":1,
+      //           "postDate":"2017-08-28T07:00:00Z",
+      //           "amount":-1325,
+      //           "originalDisplayName":"SQ *GARDEN CREAMERY",
+      //           "displayName":"Split Source",
+      //           "userDisplayName":"",
+      //           "note":"",
+      //           "category":3,
+      //           "userCategory":0,
+      //           "uploadId":5699257587728384,
+      //           "splits": [2,3,4],
+      //         },
+      //         {
+      //           "id":2,
+      //           "postDate":"2017-08-28T07:00:00Z",
+      //           "amount":-1325,
+      //           "originalDisplayName":"SQ *GARDEN CREAMERY",
+      //           "displayName":"",
+      //           "userDisplayName":"Garden Creamery split 1",
+      //           "note":"",
+      //           "category":3,
+      //           "userCategory":2,
+      //           "uploadId":5699257587728384,
+      //           "splitSourceId": 1,
+      //         },
+      //         {
+      //           "id":3,
+      //           "postDate":"2017-08-28T07:00:00Z",
+      //           "amount":-1325,
+      //           "originalDisplayName":"SQ *GARDEN CREAMERY",
+      //           "displayName":"",
+      //           "userDisplayName":"Garden Creamery split 2",
+      //           "note":"",
+      //           "category":3,
+      //           "userCategory":5,
+      //           "uploadId":5699257587728384,
+      //           "splitSourceId": 1,
+      //         },
+      //         {
+      //           "id":4,
+      //           "postDate":"2017-08-28T07:00:00Z",
+      //           "amount":-1325,
+      //           "originalDisplayName":"SQ *GARDEN CREAMERY",
+      //           "displayName":"",
+      //           "userDisplayName":"Garden Creamery split 3",
+      //           "note":"",
+      //           "category":3,
+      //           "userCategory":3,
+      //           "uploadId":5699257587728384,
+      //           "splitSourceId": 1,
+      //         },
+      //         {
+      //           "id":4965856756891648,
+      //           "postDate":"2017-08-28T07:00:00Z",
+      //           "amount":-1325,
+      //           "originalDisplayName":"SQ *GARDEN CREAMERY",
+      //           "displayName":"Garden Creamery",
+      //           "userDisplayName":"",
+      //           "note":"",
+      //           "category":3,
+      //           "userCategory":0,
+      //           "uploadId":5699257587728384
+      //         },
+      //         {
+      //           "id":4965856756891648,
+      //           "postDate":"2017-08-28T07:00:00Z",
+      //           "amount":-1325,
+      //           "originalDisplayName":"SQ *GARDEN CREAMERY",
+      //           "displayName":"No splits",
+      //           "userDisplayName":"",
+      //           "note":"",
+      //           "category":3,
+      //           "userCategory":0,
+      //           "uploadId":5699257587728384,
+      //           "splits": [],
+      //         },
+      //         {
+      //           "id":4965856756891648,
+      //           "postDate":"2017-08-28T07:00:00Z",
+      //           "amount":-1325,
+      //           "originalDisplayName":"SQ *GARDEN CREAMERY",
+      //           "displayName":"Garden Creamery",
+      //           "userDisplayName":"",
+      //           "note":"",
+      //           "category":3,
+      //           "userCategory":0,
+      //           "uploadId":5699257587728384
+      //         },
+      //         {
+      //           "id":4965856756891648,
+      //           "postDate":"2017-08-28T07:00:00Z",
+      //           "amount":-1325,
+      //           "originalDisplayName":"SQ *GARDEN CREAMERY",
+      //           "displayName":"Garden Creamery",
+      //           "userDisplayName":"",
+      //           "note":"",
+      //           "category":3,
+      //           "userCategory":0,
+      //           "uploadId":5699257587728384
+      //         },
+      //         {
+      //           "id":4965856756891648,
+      //           "postDate":"2017-08-28T07:00:00Z",
+      //           "amount":-1325,
+      //           "originalDisplayName":"SQ *GARDEN CREAMERY",
+      //           "displayName":"Garden Creamery",
+      //           "userDisplayName":"",
+      //           "note":"",
+      //           "category":3,
+      //           "userCategory":0,
+      //           "uploadId":5699257587728384
+      //         },
+      //         {
+      //           "id":4965856756891648,
+      //           "postDate":"2017-08-28T07:00:00Z",
+      //           "amount":-1325,
+      //           "originalDisplayName":"SQ *GARDEN CREAMERY",
+      //           "displayName":"Garden Creamery",
+      //           "userDisplayName":"",
+      //           "note":"",
+      //           "category":3,
+      //           "userCategory":0,
+      //           "uploadId":5699257587728384
+      //         },
+      //         {
+      //           "id":4965856756891648,
+      //           "postDate":"2017-08-28T07:00:00Z",
+      //           "amount":-1325,
+      //           "originalDisplayName":"SQ *GARDEN CREAMERY",
+      //           "displayName":"Garden Creamery",
+      //           "userDisplayName":"",
+      //           "note":"",
+      //           "category":3,
+      //           "userCategory":0,
+      //           "uploadId":5699257587728384
+      //         },
+      //         {
+      //           "id":4965856756891648,
+      //           "postDate":"2017-08-28T07:00:00Z",
+      //           "amount":-1325,
+      //           "originalDisplayName":"SQ *GARDEN CREAMERY",
+      //           "displayName":"Garden Creamery",
+      //           "userDisplayName":"",
+      //           "note":"",
+      //           "category":3,
+      //           "userCategory":0,
+      //           "uploadId":5699257587728384
+      //         }
+      //       ]
+      //     });
+      //   } else {
+      //     alert('Problem in test.')
+      //   }
+      //   server.respondWith(
+      //     'GET',
+      //     '/svc/txns',
+      //     [ status, { 'Content-Type': 'application/json' }, body ]
+      //   );
+      //   var container = document.getElementById('container');
+      //   container.appendChild(document.createElement('pluot-txns'));
+      // }
     </script>
   </head>
-  <body>
-    <paper-radio-group id="status">
-      <paper-radio-button name="200">200 Success</paper-radio-button>
-      <paper-radio-button name="404">404 Error</paper-radio-button>
-      <paper-radio-button name="500">500 Error</paper-radio-button>
-    </paper-radio-group>
-    <div id="container">fooooooooooooooooooooooooooooooooo</div>
+  <body style="display: flex; flex-direction: row; align-items: stretch;">
+
+    <test-fixture id="Basic" style="flex-grow">
+      <template>
+        <pluot-txns></pluot-txns>
+      </template>
+    </test-fixture>
+
     <script>
-      var statusEl = document.getElementById('status');
-      statusEl.addEventListener('selected-changed', setState);
+      suite('pluot-txns', function() {
+
+        var server;
+        var contentTypeHeader = { 'Content-Type': 'application/json' };
+
+        setup(function() { server = sinon.fakeServer.create(); });
+
+        teardown(function() { server.restore(); });
+
+        test('single transaction selection edit', function(done) {
+          server.respondWith(
+              'GET',
+              '/svc/txns',
+              [
+                200,
+                contentTypeHeader,
+                JSON.stringify({ txns: [
+                  {
+                    id: 6513969128800256,
+                    postDate: '2017-08-30T07:00:00Z',
+                    amount: -1198,
+                    originalDisplayName: 'HLU*Hulu 86506337-U',
+                    displayName: 'Hulu',
+                    userDisplayName: '',
+                    note: '',
+                    category: 5,
+                    userCategory: 0,
+                    uploadId: 5699257587728384,
+                  }
+                ]}),
+              ]);
+          var el = fixture('Basic');
+          flush(function() {
+            server.respond();
+            flush(function() {
+              assert.equal(el._editTxn.displayName, '');
+              assert.equal(el._editTxn.category, null);
+              assert.equal(el._txnModel.filtered.length, 1);
+              // Select the first transaction.
+              var ironList = el.shadowRoot.querySelector('iron-list');
+              ironList.selectIndex(0);
+              assert.equal(el._editTxn.displayName, 'Hulu');
+              assert.equal(el._editTxn.category, 5);
+              el.edit();
+              var edit = el.shadowRoot.querySelector('pluot-edit');
+              assert.equal(edit.txn.displayName, 'Hulu');
+              assert.equal(edit.txn.category, 5);
+              var cat = edit.shadowRoot.querySelector('pluot-category');
+              assert.equal(cat.code, 5);
+              var displayName = edit.shadowRoot.querySelector('paper-input');
+              assert.equal(displayName.value, 'Hulu');
+              done();
+            });
+          });
+        });
+
+      });
     </script>
   </body>
 </html>
