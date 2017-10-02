@@ -44,11 +44,11 @@
 
     <pluot-globals id="globals"></pluot-globals>
 
-    <iron-a11y-keys target="[[$.txnList]]" keys="[[_computeEditKeys(_selected.length)]]" on-keys-pressed="edit"></iron-a11y-keys>
-    <iron-a11y-keys target="[[$.txnList]]" keys="[[_computeSplitKeys(_selected.length)]]" on-keys-pressed="split"></iron-a11y-keys>
-    <iron-a11y-keys target="[[$.txnList]]" keys="/" on-keys-pressed="search"></iron-a11y-keys>
+    <iron-a11y-keys target="[[$.txnList]]" keys="[[_computeEditKeys(_selected.length)]]" on-keys-pressed="_toggleEdit"></iron-a11y-keys>
+    <iron-a11y-keys target="[[$.txnList]]" keys="[[_computeSplitKeys(_selected.length)]]" on-keys-pressed="_toggleSplit"></iron-a11y-keys>
+    <iron-a11y-keys target="[[$.txnList]]" keys="/" on-keys-pressed="_toggleSearch"></iron-a11y-keys>
 
-    <pluot-search id="search" query="{{query}}" hidden></pluot-search>
+    <pluot-search id="search" query="{{query}}" hidden$="[[!searching]]"></pluot-search>
 
     <iron-list id="txnList" class="flex" items="[[_txnModel.filtered]]" multi-selection selection-enabled selected-items="{{_selected}}">
       <template>
@@ -66,10 +66,10 @@
       </template>
     </iron-list>
 
-    <pluot-edit id="editDialog" fit-into="[[$.txnList]]" on-iron-overlay-closed="_onEditClosed" txn="{{_editTxn}}" num-selected="[[_selected.length]]"></pluot-edit>
-    <pluot-split id="splitDialog" fit-into="[[$.txnList]]" on-iron-overlay-closed="_onSplitClose" split-txn="[[_splitTxn]]" splits="{{_splits}}"></pluot-split>
+    <pluot-edit fit-into="[[$.txnList]]" on-iron-overlay-closed="_onEditClosed" txn="{{_editTxn}}" num-selected="[[_selected.length]]" opened$="[[editing]]"></pluot-edit>
+    <pluot-split fit-into="[[$.txnList]]" on-iron-overlay-closed="_onSplitClose" split-txn="[[_splitTxn]]" splits="{{_splits}}" opened$="[[splitting]]"></pluot-split>
 
-    <iron-ajax auto url="[[$.globals.urlPrefix]]txns" handle-as="json" last-response="{{listResp}}"></iron-ajax>
+    <iron-ajax auto url="[[$.globals.urlPrefix]]txns" handle-as="json" last-response="{{_listResp}}"></iron-ajax>
     <iron-ajax id="patchAjax" url="[[$.globals.urlPrefix]]txns" method="PATCH" content-type="application/json" body="[[_computePatchReq(_selected, _editTxn.*)]]" handle-as="json" on-response="_onPatchAjaxResponse"></iron-ajax>
     <iron-ajax id="splitAjax" url="[[$.globals.urlPrefix]]txns:split" method="POST" content-type="application/json" body="[[_computeSplitReq(_splitTxn, _splits.*)]]" handle-as="json" on-response="_onSplitResponse"></iron-ajax>
   </template>
@@ -78,13 +78,17 @@
       static get is() { return 'pluot-txns'; }
       static get properties() {
         return {
-          toolbar: { type: Array, notify: true, computed: '_computeToolbar(_selected.length)' },
-          _txnModel: { type: Object, computed: '_computeTxnModel(query, listResp.txns.*)' },
+          canEdit: { type: Boolean, notify: true, computed: '_computeCanEdit(_selected.length)' },
+          canSplit: { type: Boolean, notify: true, computed: '_computeCanSplit(_selected.length)' },
+          editing: { type: Boolean, notify: true, value: false },
+          searching: { type: Boolean, notify: true, value: false, observer: '_resetSearch' },
+          splitting: { type: Boolean, notify: true, value: false },
           _editTxn: { type: Object, value: { displayName: "", category: null } },
-          listResp: { type: Object, value: { txns: [] } },
+          _listResp: { type: Object, value: { txns: [] } },
+          _selected: { type: Array, value: [] },
           _splitTxn: { type: Object, computed: '_computeSplitTxn(_selected.*, _txnModel)' },
           _splits: { type: Array, value: [] },
-          _selected: { type: Array, value: [] },
+          _txnModel: { type: Object, computed: '_computeTxnModel(query, _listResp.txns.*)' },
         };
       }
       static get observers() {
@@ -93,12 +97,10 @@
           '_updateSplits(_splitTxn, _txnModel)',
         ];
       }
-      edit() { this.$.editDialog.open(); }
-      search() {
-        this.$.search.reset();
-        this.$.search.hidden = !this.$.search.hidden;
-      }
-      split() { this.$.splitDialog.open(); }
+      _resetSearch() { this.$.search.reset(); }
+      _toggleEdit() { this.editing = !this.editing; }
+      _toggleSearch() { this.searching = !this.searching; }
+      _toggleSplit() { this.splitting = !this.splitting; }
       _updateEditTxn(_selectedProp) {
         var displayName = '';
         var category = null;
@@ -133,13 +135,8 @@
         });
         return model;
       }
-      _computeToolbar(_selectedLength) {
-        return [
-          { icon: 'image:edit', handler: 'edit', disabled: (_selectedLength == 0) },
-          { icon: 'search', handler: 'search' },
-          { icon: 'communication:call-split', handler: 'split', disabled: (_selectedLength != 1) },
-        ];
-      }
+      _computeCanEdit(_selectedLength) { return _selectedLength > 0; }
+      _computeCanSplit(_selectedLength) { return _selectedLength == 1; }
       _computePatchReq(_selected, _editTxn) {
         var fields = [];
         _editTxn = _editTxn.base;
@@ -178,10 +175,10 @@
         }
       }
       _onPatchAjaxResponse(evt) {
-        for (var i = 0; i < this.listResp.txns.length; i++) {
+        for (var i = 0; i < this._listResp.txns.length; i++) {
           for (var j = 0; j < evt.currentTarget.lastResponse.txns.length; j++) {
-            if (this.listResp.txns[i].id == evt.currentTarget.lastResponse.txns[j].id) {
-              this.set('listResp.txns.'+i, evt.currentTarget.lastResponse.txns[j]);
+            if (this._listResp.txns[i].id == evt.currentTarget.lastResponse.txns[j].id) {
+              this.set('_listResp.txns.'+i, evt.currentTarget.lastResponse.txns[j]);
             }
           }
         }

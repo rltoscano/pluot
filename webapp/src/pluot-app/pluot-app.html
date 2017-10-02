@@ -76,14 +76,14 @@
             <div main-title>Pluot</div>
             <iron-pages selected="[[appView]]">
               <div>
-                <template is="dom-repeat" items="[[txnsToolbar]]">
-                  <paper-icon-button disabled="[[item.disabled]]" icon="[[item.icon]]" data-host="txns" data-handler$="[[item.handler]]" on-tap="_onAction"></paper-icon-button>
-                </template>
+                <paper-icon-button icon="image:edit" toggles disabled="[[!txnsCanEdit]]" active="{{txnsEditing}}"></paper-icon-button>
+                <paper-icon-button icon="search" toggles active="{{txnsSearching}}"></paper-icon-button>
+                <paper-icon-button icon="communication:call-split" toggles disabled="[[!txnsCanSplit]]" active="{{txnsSplitting}}"></paper-icon-button>
               </div>
               <div></div>
               <div>
                 <template is="dom-repeat" items="[[rulesToolbar]]">
-                  <paper-icon-button disabled="[[item.disabled]]" icon="[[item.icon]]" data-host="rules" data-handler$="[[item.handler]]" on-tap="_onAction"></paper-icon-button>
+                  <paper-icon-button disabled="[[item.disabled]]" icon="[[item.icon]]" toggles="[[item.toggles]]" active="[[item.active]]" data-host="rules" data-handler$="[[item.handler]]" data-index$="[[index]]" on-tap="_onAction"></paper-icon-button>
                 </template>
               </div>
               <div></div>
@@ -92,7 +92,7 @@
         </app-header>
 
         <iron-pages selected="[[appView]]" class="flex layout vertical">
-          <pluot-txns id="txns" class="flex" toolbar="{{txnsToolbar}}"></pluot-txns>
+          <pluot-txns class="flex" can-edit="{{txnsCanEdit}}" editing="{{txnsEditing}}" searching="{{txnsSearching}}" can-split="{{txnsCanSplit}}" splitting="{{txnsSplitting}}"></pluot-txns>
           <pluot-upload class="flex" ></pluot-upload>
           <pluot-rules id="rules" class="flex" toolbar="{{rulesToolbar}}"></pluot-rules>
           <pluot-agg class="flex"></pluot-agg>
