@@ -7,7 +7,6 @@
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-input/iron-input.html">
 <link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
-<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
 
@@ -19,47 +18,29 @@
         @apply --layout-vertical;
         padding: 16px;
       }
-      paper-icon-button {
-        color: #583759;
-      }
       google-chart {
         height: 480px;
         width: 640px;
       }
     </style>
-    <pluot-globals id="globals" categories="{{categories}}"></pluot-globals>
+    <pluot-globals id="globals" categories="{{_categories}}"></pluot-globals>
     <div>
       <paper-dropdown-menu label="Time Window">
-        <paper-listbox slot="dropdown-content" attr-for-selected="timeWindow" selected="{{timeWindow}}">
+        <paper-listbox slot="dropdown-content" attr-for-selected="timeWindow" selected="{{_timeWindow}}">
           <paper-item timeWindow="0">Last 30 days</paper-item>
           <paper-item timeWindow="1">Last month</paper-item>
           <paper-item timeWindow="2">Last 6 months</paper-item>
         </paper-listbox>
       </paper-dropdown-menu>
     </div>
-    <google-chart
-        class="flex"
-        type="pie"
-        cols='[{"label": "Category", "type": "string"},{"label": "Total", "type": "number"}]'
-        rows="[[totals]]"
-        options='{"pieHole": 0.3}'>
-    </google-chart>
-    <google-chart
-        class="flex"
-        type="column"
-        cols='[{"label": "Month", "type": "string"}, {"label": "Spending", "type": "number"}, {"label": "Income", "type": "number"}]'
-        rows="[[monthly]]">
-    </google-chart>
-    <iron-ajax
-        id="computeAggAjax"
-        auto
+    <google-chart class="flex" type="pie" options='{"pieHole": 0.3}' rows="[[_computeTotals(_aggResp, _categories)]]"
+        cols='[{"label": "Category", "type": "string"},{"label": "Total", "type": "number"}]'></google-chart>
+    <google-chart class="flex" type="column" rows="[[_computeMonthly(_aggResp)]]"
+        cols='[{"label": "Month", "type": "string"}, {"label": "Spending", "type": "number"}, {"label": "Income", "type": "number"}]'></google-chart>
+    <iron-ajax auto method="POST" content-type="application/json" handle-as="json" debounce-duration="1000"
         url="[[$.globals.urlPrefix]]aggs"
-        method="POST"
-        content-type="application/json"
-        body="[[computeAggReq]]"
-        handle-as="json"
-        last-response="{{computeAggResp}}"
-        debounce-duration="1000"></iron-ajax>
+        body="[[_computeAggReq(_timeWindow)]]"
+        last-response="{{_aggResp}}"></iron-ajax>
   </template>
   <script>
     class PluotAgg extends Polymer.Element {
@@ -67,42 +48,20 @@
       static get ignoredCategories() { return [13, 14, 15, 16, 17]; }
       static get properties() {
         return {
-          computeAggReq: {
-            type: Object,
-            computed: '_computeComputeAggReq(timeWindow)'
-          },
-          computeAggResp: { type: Object, value: { totals: [], months: [] } },
-          totals: {
-            type: Array,
-            value: [],
-            computed: '_computeTotals(computeAggResp, categories)'
-          },
-          monthly: {
-            type: Array, value: [], computed: '_computeMonthly(computeAggResp)'
-          },
-          timeWindow: { type: String, value: "0" },
-          categories: { type: Array, value: [] },
+          _aggResp: { type: Object, value: { totals: [], months: [] } },
+          _timeWindow: { type: String, value: "0" },
+          _categories: { type: Array, value: [] },
         };
       }
-      _computeComputeAggReq(timeWindow) {
-        return { timeWindow: parseInt(timeWindow) };
-      }
-      _computeTotals(computeAggResp, categories) {
-        var totals = [];
-        for (var i = 0; i < categories.length; i++) {
-          if (!PluotAgg.ignoredCategories.includes(categories[i].code)) {
-            totals.push(
-              [
-                categories[i].displayName,
-                Math.abs(computeAggResp.totals[i]) / 100.0
-              ]);
-          }
-        }
+      _computeAggReq(_timeWindow) { return { timeWindow: parseInt(_timeWindow) }; }
+      _computeTotals(_aggResp, _categories) {
+        var totals = _categories.
+            filter(c => !PluotAgg.ignoredCategories.includes(c.code)).
+            map(c => [ c.displayName, Math.abs(_aggResp.totals[c.code]) / 100.0 ]);
         return totals;
       }
-      _computeMonthly(computeAggResp) {
-        return computeAggResp.months.map(
-          m => [m.month, m.expense / 100.0, m.income / 100.0]);
+      _computeMonthly(_aggResp) {
+        return _aggResp.months.map(m => [m.month, m.expense / 100.0, m.income / 100.0]);
       }
     }
     window.customElements.define(PluotAgg.is, PluotAgg);

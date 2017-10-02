@@ -1,0 +1,71 @@
+<html>
+  <head>
+    <title>pluot-agg test</title>
+    <script src="../../bower_components/webcomponentsjs/webcomponents-loader.js"></script>
+    <link rel="import" href="../../src/pluot-app/pluot-agg.html">
+    <script src="../../bower_components/web-component-tester/browser.js"></script>
+    <!-- Ensure Web Animations polyfill is loaded since neon-animation 2.0 doesn't import it -->
+    <link rel="import" href="../../bower_components/neon-animation/web-animations.html">
+  </head>
+  <body>
+
+    <test-fixture id="agg">
+      <template>
+        <pluot-agg></pluot-agg>
+      </template>
+    </test-fixture>
+
+    <script>
+
+      suite('pluot-agg', function() {
+
+        var server;
+        var jsonContentType = { 'Content-Type': 'application/json' };
+
+        setup(function() {
+          server = sinon.fakeServer.create();
+          server.autoRespond = true;
+        });
+
+        teardown(function() { server.restore(); });
+
+        test('no available aggregations', function(done) {
+          server.respondWith(
+            'POST',
+            '/svc/aggs',
+            [ 200, jsonContentType, JSON.stringify({ totals: [], months: [] }) ]
+          );
+          var el = fixture('agg');
+          flush(function() {
+            server.respond();
+            done();
+          });
+        });
+
+        test('sample aggregations', function(done) {
+          server.respondWith(
+              'POST',
+              '/svc/aggs',
+              JSON.stringify({
+                totals: [
+                  -100, -200, -300, -100, -200, -300, -100, -200, -300,
+                  -100, -200, -300, -100, -200, -300
+                ],
+                months: [
+                  { month: '2017-07', expense: 300, income: 0 },
+                  { month: '2017-08', expense: 200, income: 0 },
+                  { month: '2017-09', expense: 400, income: 100 },
+                ],
+              }));
+          var el = fixture('agg');
+          console.log(JSON.stringify(el.totals));
+          setTimeout(function() {
+            done();
+          }, 9500);
+        });
+
+      });
+
+    </script>
+  </body>
+</html>
