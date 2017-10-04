@@ -4,7 +4,9 @@
 
 <dom-module id="pluot-amount">
   <template>
-    <paper-input label="Amount" type="text" value="{{_model}}"></paper-input>
+    <paper-input label="Amount" type="text" value="{{_model}}" auto-validate pattern="-?\d*\.?\d?\d?">
+      <div slot="prefix">$</div>
+    </paper-input>
   </template>
 
   <script>
