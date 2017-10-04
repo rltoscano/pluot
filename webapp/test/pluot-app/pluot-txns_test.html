@@ -226,7 +226,9 @@
   </head>
   <body style="display: flex; flex-direction: row; align-items: stretch;">
 
-    <test-fixture id="Basic" style="flex-grow">
+    <!-- <pluot-txns></pluot-txns> -->
+
+    <test-fixture id="Basic">
       <template>
         <pluot-txns></pluot-txns>
       </template>
@@ -234,36 +236,35 @@
 
     <script>
       suite('pluot-txns', function() {
-
         var server;
-        var contentTypeHeader = { 'Content-Type': 'application/json' };
 
-        setup(function() { server = sinon.fakeServer.create(); });
+        setup(function() {
+          server = sinon.fakeServer.create();
+          server.respondWith(
+              'GET',
+              '/svc/txns',
+              JSON.stringify(
+                {
+                  txns: [
+                    {
+                      id: 6513969128800256,
+                      postDate: '2017-08-30T07:00:00Z',
+                      amount: -1198,
+                      originalDisplayName: 'HLU*Hulu 86506337-U',
+                      displayName: 'Hulu',
+                      userDisplayName: '',
+                      note: '',
+                      category: 5,
+                      userCategory: 0,
+                      uploadId: 5699257587728384,
+                    }
+                  ]
+                }));
+        });
 
         teardown(function() { server.restore(); });
 
         test('single transaction selection edit', function(done) {
-          server.respondWith(
-              'GET',
-              '/svc/txns',
-              [
-                200,
-                contentTypeHeader,
-                JSON.stringify({ txns: [
-                  {
-                    id: 6513969128800256,
-                    postDate: '2017-08-30T07:00:00Z',
-                    amount: -1198,
-                    originalDisplayName: 'HLU*Hulu 86506337-U',
-                    displayName: 'Hulu',
-                    userDisplayName: '',
-                    note: '',
-                    category: 5,
-                    userCategory: 0,
-                    uploadId: 5699257587728384,
-                  }
-                ]}),
-              ]);
           var el = fixture('Basic');
           flush(function() {
             server.respond();
@@ -276,7 +277,7 @@
               ironList.selectIndex(0);
               assert.equal(el._editTxn.displayName, 'Hulu');
               assert.equal(el._editTxn.category, 5);
-              el.edit();
+              el.editing = true;
               var edit = el.shadowRoot.querySelector('pluot-edit');
               assert.equal(edit.txn.displayName, 'Hulu');
               assert.equal(edit.txn.category, 5);
