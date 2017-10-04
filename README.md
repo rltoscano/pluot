@@ -1,7 +1,7 @@
 # Installation
 
-1. Pull down all the polymer depedencies with `polymer install` run from the
-   webapp folder.
+1. Pull down all the polymer dependencies with `polymer install` run from the
+   `webapp` folder.
 
 # Deployment
 
