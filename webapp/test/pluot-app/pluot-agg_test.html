@@ -9,6 +9,9 @@
   </head>
   <body>
 
+
+      <pluot-agg></pluot-agg>
+
     <test-fixture id="agg">
       <template>
         <pluot-agg></pluot-agg>
@@ -29,17 +32,9 @@
 
         teardown(function() { server.restore(); });
 
-        test('no available aggregations', function(done) {
-          server.respondWith(
-            'POST',
-            '/svc/aggs',
-            [ 200, jsonContentType, JSON.stringify({ totals: [], months: [] }) ]
-          );
+        test('no available aggregations', function() {
+          server.respondWith('POST', '/svc/aggs', JSON.stringify({ totals: [], months: [] }));
           var el = fixture('agg');
-          flush(function() {
-            server.respond();
-            done();
-          });
         });
 
         test('sample aggregations', function(done) {
@@ -55,10 +50,15 @@
                   { month: '2017-07', expense: 300, income: 0 },
                   { month: '2017-08', expense: 200, income: 0 },
                   { month: '2017-09', expense: 400, income: 100 },
+                  { month: '2017-10', expense: 300, income: 0 },
+                  { month: '2017-11', expense: 200, income: 0 },
+                  { month: '2017-12', expense: 400, income: 100 },
                 ],
               }));
           var el = fixture('agg');
-          console.log(JSON.stringify(el.totals));
+          flush(function() {
+            console.log(JSON.stringify(el.totals));
+          });
           setTimeout(function() {
             done();
           }, 9500);

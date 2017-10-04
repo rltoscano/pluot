@@ -31,6 +31,23 @@
               ]
             }
           ));
+      server.respondWith(
+          'POST',
+          '/svc/aggs',
+          JSON.stringify({
+            totals: [
+              -100, -200, -300, -100, -200, -300, -100, -200, -300,
+              -100, -200, -300, -100, -200, -300
+            ],
+            months: [
+              { month: '2017-07', expense: 300, income: 0 },
+              { month: '2017-08', expense: 200, income: 0 },
+              { month: '2017-09', expense: 400, income: 100 },
+              { month: '2017-10', expense: 300, income: 0 },
+              { month: '2017-11', expense: 200, income: 0 },
+              { month: '2017-12', expense: 400, income: 100 },
+            ],
+          }));
     </script>
   </head>
   <body>

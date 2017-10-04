@@ -15,12 +15,7 @@
     <style include="iron-flex iron-flex-alignment">
       :host {
         font-family: sans-serif;
-        @apply --layout-vertical;
         padding: 16px;
-      }
-      google-chart {
-        height: 480px;
-        width: 640px;
       }
     </style>
     <pluot-globals id="globals" categories="{{_categories}}"></pluot-globals>
@@ -33,9 +28,9 @@
         </paper-listbox>
       </paper-dropdown-menu>
     </div>
-    <google-chart class="flex" type="pie" options='{"pieHole": 0.3}' rows="[[_computeTotals(_aggResp, _categories)]]"
+    <google-chart type="pie" options='{"pieHole": 0.3}' rows="[[_computeTotals(_aggResp, _categories)]]"
         cols='[{"label": "Category", "type": "string"},{"label": "Total", "type": "number"}]'></google-chart>
-    <google-chart class="flex" type="column" rows="[[_computeMonthly(_aggResp)]]"
+    <google-chart type="column" rows="[[_computeMonthly(_aggResp)]]"
         cols='[{"label": "Month", "type": "string"}, {"label": "Spending", "type": "number"}, {"label": "Income", "type": "number"}]'></google-chart>
     <iron-ajax auto method="POST" content-type="application/json" handle-as="json" debounce-duration="1000"
         url="[[$.globals.urlPrefix]]aggs"
