@@ -82,9 +82,8 @@
               </div>
               <div></div>
               <div>
-                <template is="dom-repeat" items="[[rulesToolbar]]">
-                  <paper-icon-button disabled="[[item.disabled]]" icon="[[item.icon]]" toggles="[[item.toggles]]" active="[[item.active]]" data-host="rules" data-handler$="[[item.handler]]" data-index$="[[index]]" on-tap="_onAction"></paper-icon-button>
-                </template>
+                <paper-icon-button icon="add" toggles active="{{rulesAdding}}"></paper-icon-button>
+                <paper-icon-button icon="delete" disabled="[[!rulesCanDelete]]" on-tap="_deleteRule"></paper-icon-button>
               </div>
               <div></div>
             </iron-pages>
@@ -93,8 +92,8 @@
 
         <iron-pages selected="[[appView]]" class="flex layout vertical">
           <pluot-txns class="flex" can-edit="{{txnsCanEdit}}" editing="{{txnsEditing}}" searching="{{txnsSearching}}" can-split="{{txnsCanSplit}}" splitting="{{txnsSplitting}}"></pluot-txns>
-          <pluot-upload class="flex" ></pluot-upload>
-          <pluot-rules id="rules" class="flex" toolbar="{{rulesToolbar}}"></pluot-rules>
+          <pluot-upload class="flex"></pluot-upload>
+          <pluot-rules id="rules" class="flex" can-delete="{{rulesCanDelete}}" adding="{{rulesAdding}}"></pluot-rules>
           <pluot-agg class="flex"></pluot-agg>
         </iron-pages>
 
@@ -112,9 +111,7 @@
           appView: { type: Number, value: 3 },
         };
       }
-      _onAction(evt) {
-        this.$[evt.target.dataset.host][evt.target.dataset.handler]();
-      }
+      _deleteRule() { this.$.rules.delete(); }
     }
     window.customElements.define(PluotApp.is, PluotApp);
   </script>

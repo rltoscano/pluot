@@ -39,7 +39,7 @@
 
     <pluot-globals id="globals"></pluot-globals>
 
-    <paper-dialog id="editDialog" class="layout vertical">
+    <paper-dialog id="editDialog" class="layout vertical" opened="{{adding}}">
       <paper-input label="Pattern" value="{{newRulePattern}}"></paper-input>
       <paper-checkbox checked="{{newRuleRegexp}}">Regexp</paper-checkbox>
       <paper-input label="Name" value="{{newRuleDisplayName}}"></paper-input>
@@ -90,7 +90,7 @@
         url="[[$.globals.urlPrefix]]rules"
         method="POST"
         content-type="application/json"
-        body="[[createRuleReq]]"
+        body="[[_computeCreateRuleReq(newRulePattern, newRuleRegexp, newRuleCategoryStr, newRuleDisplayName)]]"
         handle-as="json"
         on-response="_addRule"></iron-ajax>
     <iron-ajax
@@ -105,15 +105,8 @@
       static get is() { return 'pluot-rules'; }
       static get properties() {
         return {
-          createRuleReq: {
-            type: Object,
-            computed: '_computeCreateRuleReq(newRulePattern, newRuleRegexp, newRuleCategoryStr, newRuleDisplayName)',
-          },
-          toolbar: {
-            type: Array,
-            notify: true,
-            computed: '_computeToolbar(selectedRule)'
-          },
+          adding: { type: Boolean, notify: true, value: false },
+          canDelete: { type: Boolean, notify: true, computed: '_computeCanDelete(selectedRule)' },
           newRulePattern: { type: String, value: "" },
           newRuleCategoryStr: { type: String, value: "" },
           newRuleRegexp: { type: Boolean, value: false },
@@ -156,16 +149,9 @@
           category: parseInt(newRuleCategoryStr)
         };
       }
-      _computeToolbar(selectedRule) {
-        return [
-          { icon: 'add', handler: 'create' },
-          { icon: 'delete', handler: 'delete', disabled: (selectedRule == null) }
-        ];
-      }
-      _onCreateRule() {
-        this.$.createRuleAjax.generateRequest();
-      }
+      _computeCanDelete(selectedRule) { return selectedRule != null; }
       _formatCategory(category) { return this.$.globals.categoryName(category); }
+      _onCreateRule() { this.$.createRuleAjax.generateRequest(); }
       _onProposalTap(evt) {
         this.newRulePattern = evt.currentTarget.rule.pattern;
         this.newRuleCategoryStr = String(evt.currentTarget.rule.category);
