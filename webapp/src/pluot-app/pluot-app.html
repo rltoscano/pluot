@@ -102,6 +102,7 @@
       static get properties() {
         return {
           appView: { type: Number, value: 3, observer: '_closeDrawer' },
+          txnsEditing: { type: Boolean, value: false },
         };
       }
       _closeDrawer() {

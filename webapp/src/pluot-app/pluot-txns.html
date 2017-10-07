@@ -85,8 +85,8 @@
       </template>
     </iron-list>
 
-    <pluot-edit fit-into="[[$.txnList]]" on-iron-overlay-closed="_onEditClosed" txn="{{_editTxn}}" num-selected="[[_selected.length]]" opened$="[[editing]]"></pluot-edit>
-    <pluot-split fit-into="[[$.txnList]]" on-iron-overlay-closed="_onSplitClose" split-txn="[[_splitTxn]]" splits="{{_splits}}" opened$="[[splitting]]"></pluot-split>
+    <pluot-edit fit-into="[[$.txnList]]" on-iron-overlay-closed="_onEditClosed" txn="{{_editTxn}}" num-selected="[[_selected.length]]" opened="[[editing]]"></pluot-edit>
+    <pluot-split fit-into="[[$.txnList]]" on-iron-overlay-closed="_onSplitClose" split-txn="[[_splitTxn]]" splits="{{_splits}}" opened="[[splitting]]"></pluot-split>
 
     <iron-ajax auto url="[[$.globals.urlPrefix]]txns" handle-as="json" last-response="{{_listResp}}"></iron-ajax>
     <iron-ajax id="patchAjax" url="[[$.globals.urlPrefix]]txns" method="PATCH" content-type="application/json" body="[[_computePatchReq(_selected, _editTxn.*)]]" handle-as="json" on-response="_onPatchAjaxResponse"></iron-ajax>
