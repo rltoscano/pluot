@@ -10,7 +10,11 @@
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-icons/communication-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/editor-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/image-icons.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/maps-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/places-icons.html">
 <link rel="import" href="../../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
@@ -22,13 +26,25 @@
         @apply(--layout-vertical);
       }
       .date {
-        width: 64px;
+        font-size: 75%;
+        color: gray;
       }
       .category {
-        width: 128px;
+        width: 100px;
+      }
+      .amount {
+        text-align: right;
+        width: 75px;
+      }
+      .displayName {
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
       }
       iron-list paper-item {
-        border-bottom: 1px black solid;
+        border-bottom-width: 1px;
+        border-bottom-color: #eee;
+        border-bottom-style: solid;
       }
       paper-item > * {
         padding-left: 16px;
@@ -53,15 +69,17 @@
     <iron-list id="txnList" class="flex" items="[[_txnModel.filtered]]" multi-selection selection-enabled selected-items="{{_selected}}">
       <template>
         <paper-item class$="layout horizontal is-selected-[[selected]]">
-          <div class="date">[[_formatDate(item.postDate)]]</div>
-          <div class="displayName flex">[[_formatDisplayName(item)]]</div>
+          <iron-icon icon="[[_computeIcon(item)]]"></iron-icon>
+          <div class="flex" style="overflow: hidden;">
+            <div class="displayName">[[_formatDisplayName(item)]]</div>
+            <div class="date">[[_formatDate(item.postDate)]]</div>
+          </div>
           <div class="splitbadge">
             <template is="dom-if" if="[[item.splitSourceId]]">
               <iron-icon icon="communication:call-split"></iron-icon>
             </template>
           </div>
           <div class="amount">[[_formatAmount(item.amount)]]</div>
-          <div class="category">[[_formatCategory(item)]]</div>
         </paper-item>
       </template>
     </iron-list>
@@ -168,7 +186,27 @@
       _computeSplitReq(_splitTxn, _splitsProp) {
         return { sourceId: _splitTxn.id, splits: _splitsProp.base };
       }
-      _formatCategory(txn) { return this.$.globals.categoryName(txn.userCategory || txn.category); }
+      _computeIcon(txn) {
+        switch(txn.userCategory || txn.category) {
+          case 1: return 'image:assistant-photo'; // Uncategorized
+          case 2: return 'editor:format-paint'; // Home Improvement
+        	case 3: return 'maps:restaurant'; // EatingOut
+        	case 4: return 'maps:local-grocery-store'; // Groceries
+        	case 5: return 'image:tag-faces'; // Lifestyle
+        	case 6: return 'maps:local-pharmacy'; // Health
+        	case 7: return 'maps:train'; // Transportation
+        	case 8: return 'home'; // Residence
+        	case 9: return 'lightbulb-outline'; // Bills
+        	case 10: return 'maps:flight'; // Travel
+        	case 11: return 'card-giftcard'; // Gifts
+        	case 12: return 'trending-down'; // OtherExpense
+        	case 13: return 'trending-flat'; // Transfer
+        	case 14: return 'editor:attach-money'; // PayCheck
+        	case 15: return 'editor:insert-emoticon'; // Bonus
+        	case 16: return 'places:business-center'; // Rentals
+        	case 17: return 'trending-up'; // OtherIncome
+        }
+      }
       _onEditClosed(evt) {
         if (evt.detail.confirmed) {
           this.$.patchAjax.generateRequest();
