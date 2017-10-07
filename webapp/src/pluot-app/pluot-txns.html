@@ -45,6 +45,7 @@
         border-bottom-width: 1px;
         border-bottom-color: #eee;
         border-bottom-style: solid;
+        padding: 16px;
       }
       paper-item > * {
         padding-left: 16px;
@@ -66,7 +67,7 @@
 
     <pluot-search id="search" query="{{query}}" hidden$="[[!searching]]"></pluot-search>
 
-    <iron-list id="txnList" class="flex" items="[[_txnModel.filtered]]" multi-selection selection-enabled selected-items="{{_selected}}">
+    <iron-list id="txnList" class="flex" items="[[_txnModel.filtered]]" multi-selection selection-enabled selected-items="{{_selected}}" scroll-target="document">
       <template>
         <paper-item class$="layout horizontal is-selected-[[selected]]">
           <iron-icon icon="[[_computeIcon(item)]]"></iron-icon>
