@@ -3,6 +3,7 @@
 <link rel="import" href="../pluot-app/pluot-edit.html">
 <link rel="import" href="../pluot-app/pluot-format.html">
 <link rel="import" href="../pluot-app/pluot-globals.html">
+<link rel="import" href="../pluot-app/pluot-txn.html">
 <link rel="import" href="../pluot-app/pluot-search.html">
 <link rel="import" href="../pluot-app/pluot-split.html">
 
@@ -18,6 +19,7 @@
 <link rel="import" href="../../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 
 <dom-module id="pluot-txns">
   <template>
@@ -25,84 +27,42 @@
       :host {
         @apply(--layout-vertical);
       }
-      .date {
-        font-size: 75%;
-        color: gray;
-      }
-      .category {
-        width: 100px;
-      }
-      .amount {
-        text-align: right;
-        width: 75px;
-      }
-      .displayName {
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        overflow: hidden;
-      }
-      iron-list paper-item {
+      pluot-txn {
         border-bottom-width: 1px;
         border-bottom-color: #eee;
         border-bottom-style: solid;
-        padding: 16px;
-      }
-      paper-item > * {
-        padding-left: 16px;
-      }
-      paper-item > *:first-child {
-        padding-left: 0px;
-      }
-      iron-list paper-item.is-selected-true {
-        background-color: #583759;
-        color: #fff;
       }
     </style>
 
     <pluot-globals id="globals"></pluot-globals>
 
-    <iron-a11y-keys target="[[$.txnList]]" keys="[[_computeEditKeys(_selected.length)]]" on-keys-pressed="_toggleEdit"></iron-a11y-keys>
     <iron-a11y-keys target="[[$.txnList]]" keys="[[_computeSplitKeys(_selected.length)]]" on-keys-pressed="_toggleSplit"></iron-a11y-keys>
     <iron-a11y-keys target="[[$.txnList]]" keys="/" on-keys-pressed="_toggleSearch"></iron-a11y-keys>
 
     <pluot-search id="search" query="{{query}}" hidden$="[[!searching]]"></pluot-search>
 
-    <iron-list id="txnList" class="flex" items="[[_txnModel.filtered]]" multi-selection selection-enabled selected-items="{{_selected}}" scroll-target="document">
+    <iron-list id="txnList" class="flex" items="[[_txnModel.filtered]]" multi-selection selection-enabled selected-items="{{_selected}}">
       <template>
-        <paper-item class$="layout horizontal is-selected-[[selected]]">
-          <iron-icon icon="[[_computeIcon(item)]]"></iron-icon>
-          <div class="flex" style="overflow: hidden;">
-            <div class="displayName">[[_formatDisplayName(item)]]</div>
-            <div class="date">[[_formatDate(item.postDate)]]</div>
-          </div>
-          <div class="splitbadge">
-            <template is="dom-if" if="[[item.splitSourceId]]">
-              <iron-icon icon="communication:call-split"></iron-icon>
-            </template>
-          </div>
-          <div class="amount">[[_formatAmount(item.amount)]]</div>
-        </paper-item>
+        <pluot-txn txn="[[item]]" on-edit="_patch"></pluot-txn>
       </template>
     </iron-list>
 
-    <pluot-edit fit-into="[[$.txnList]]" on-iron-overlay-closed="_onEditClosed" txn="{{_editTxn}}" num-selected="[[_selected.length]]" opened="[[editing]]"></pluot-edit>
     <pluot-split fit-into="[[$.txnList]]" on-iron-overlay-closed="_onSplitClose" split-txn="[[_splitTxn]]" splits="{{_splits}}" opened="[[splitting]]"></pluot-split>
 
     <iron-ajax auto url="[[$.globals.urlPrefix]]txns" handle-as="json" last-response="{{_listResp}}"></iron-ajax>
-    <iron-ajax id="patchAjax" url="[[$.globals.urlPrefix]]txns" method="PATCH" content-type="application/json" body="[[_computePatchReq(_selected, _editTxn.*)]]" handle-as="json" on-response="_onPatchAjaxResponse"></iron-ajax>
-    <iron-ajax id="splitAjax" url="[[$.globals.urlPrefix]]txns:split" method="POST" content-type="application/json" body="[[_computeSplitReq(_splitTxn, _splits.*)]]" handle-as="json" on-response="_onSplitResponse"></iron-ajax>
+    <iron-ajax id="patchAjax" method="PATCH" content-type="application/json" handle-as="json" on-response="_toastTxnEditSuccess" on-error="_toastTxnEditFailed"></iron-ajax>
+    <iron-ajax id="splitAjax" url="[[$.globals.urlPrefix]]txns:split" method="POST" content-type="application/json" body="[[_computeSplitReq(_splitTxn, _splits.*)]]" handle-as="json" on-response="_toastSplitSuccess"></iron-ajax>
+
+    <paper-toast id="toast" fit-into="[[$.txnList]]"></paper-toast>
   </template>
   <script>
     class PluotTxns extends PluotFormat(Polymer.Element) {
       static get is() { return 'pluot-txns'; }
       static get properties() {
         return {
-          canEdit: { type: Boolean, notify: true, computed: '_computeCanEdit(_selected.length)' },
           canSplit: { type: Boolean, notify: true, computed: '_computeCanSplit(_selected.length)' },
-          editing: { type: Boolean, notify: true, value: false },
           searching: { type: Boolean, notify: true, value: false, observer: '_resetSearch' },
           splitting: { type: Boolean, notify: true, value: false },
-          _editTxn: { type: Object, value: { displayName: "", category: null } },
           _listResp: { type: Object, value: { txns: [] } },
           _selected: { type: Array, value: [] },
           _splitTxn: { type: Object, computed: '_computeSplitTxn(_selected.*, _txnModel)' },
@@ -110,26 +70,26 @@
           _txnModel: { type: Object, computed: '_computeTxnModel(query, _listResp.txns.*)' },
         };
       }
-      static get observers() {
-        return [
-          '_updateEditTxn(_selected.*)',
-          '_updateSplits(_splitTxn, _txnModel)',
-        ];
+      static get observers() { return [ '_updateSplits(_splitTxn, _txnModel)' ]; }
+      _patch(evt) {
+        var body = { txn: {id: evt.detail.id}, fields: [] };
+        if (evt.detail.field === 'name') {
+          body.fields.push('userDisplayName');
+          body.txn.userDisplayName = evt.detail.value;
+        } else if (evt.detail.field === 'category') {
+          body.fields.push('userCategory');
+          body.txn.userCategory = evt.detail.value;
+        } else {
+          alert('Unexpected transaction edit');
+          return;
+        }
+        this.$.patchAjax.url = this.$.globals.urlPrefix + 'txns/' + evt.detail.id;
+        this.$.patchAjax.body = body;
+        this.$.patchAjax.generateRequest();
       }
       _resetSearch() { this.$.search.reset(); }
-      _toggleEdit() { this.editing = !this.editing; }
       _toggleSearch() { this.searching = !this.searching; }
       _toggleSplit() { this.splitting = !this.splitting; }
-      _updateEditTxn(_selectedProp) {
-        var displayName = '';
-        var category = null;
-        if (_selectedProp.base.length == 1) {
-          var t = _selectedProp.base[0];
-          displayName = t.userDisplayName || t.displayName || t.originalDisplayName;
-          category = t.userCategory || t.category;
-        }
-        this._editTxn = { displayName: displayName, category: category };
-      }
       _updateSplits(_splitTxn, _txnModel) {
         if (!_splitTxn.splits) {
           this._splits = [];
@@ -154,24 +114,7 @@
         });
         return model;
       }
-      _computeCanEdit(_selectedLength) { return _selectedLength > 0; }
       _computeCanSplit(_selectedLength) { return _selectedLength == 1; }
-      _computePatchReq(_selected, _editTxn) {
-        var fields = [];
-        _editTxn = _editTxn.base;
-        if (_editTxn.displayName) {
-          fields.push('userDisplayName');
-        }
-        if (_editTxn.category) {
-          fields.push('userCategory');
-        }
-        return {
-          ids: _selected.map(t => t.id),
-          txn: { userDisplayName: _editTxn.displayName, userCategory: _editTxn.category },
-          fields: fields,
-        };
-      }
-      _computeEditKeys(_selectedLength) { return (_selectedLength == 0) ? "" : "e"; }
       _computeSplitKeys(_selectedLength) { return (_selectedLength != 1) ? "" : "s"; }
       _computeSplitTxn(_selectedProp, _txnModel) {
         if (_selectedProp.base.length != 1) {
@@ -187,50 +130,23 @@
       _computeSplitReq(_splitTxn, _splitsProp) {
         return { sourceId: _splitTxn.id, splits: _splitsProp.base };
       }
-      _computeIcon(txn) {
-        switch(txn.userCategory || txn.category) {
-          case 1: return 'image:assistant-photo'; // Uncategorized
-          case 2: return 'editor:format-paint'; // Home Improvement
-        	case 3: return 'maps:restaurant'; // EatingOut
-        	case 4: return 'maps:local-grocery-store'; // Groceries
-        	case 5: return 'image:tag-faces'; // Lifestyle
-        	case 6: return 'maps:local-pharmacy'; // Health
-        	case 7: return 'maps:train'; // Transportation
-        	case 8: return 'home'; // Residence
-        	case 9: return 'lightbulb-outline'; // Bills
-        	case 10: return 'maps:flight'; // Travel
-        	case 11: return 'card-giftcard'; // Gifts
-        	case 12: return 'trending-down'; // OtherExpense
-        	case 13: return 'trending-flat'; // Transfer
-        	case 14: return 'editor:attach-money'; // PayCheck
-        	case 15: return 'editor:insert-emoticon'; // Bonus
-        	case 16: return 'places:business-center'; // Rentals
-        	case 17: return 'trending-up'; // OtherIncome
-        }
-      }
-      _onEditClosed(evt) {
-        if (evt.detail.confirmed) {
-          this.$.patchAjax.generateRequest();
-        }
-      }
-      _onPatchAjaxResponse(evt) {
-        for (var i = 0; i < this._listResp.txns.length; i++) {
-          for (var j = 0; j < evt.currentTarget.lastResponse.txns.length; j++) {
-            if (this._listResp.txns[i].id == evt.currentTarget.lastResponse.txns[j].id) {
-              this.set('_listResp.txns.'+i, evt.currentTarget.lastResponse.txns[j]);
-            }
-          }
-        }
-        this.$.txnList.clearSelection();
-      }
       _onSplitClose(evt) {
         if (evt.detail.confirmed) {
           this.$.splitAjax.generateRequest();
         }
       }
-      _onSplitResponse(evt) {
-        alert('split done');
+      _toastSplitSuccess(evt) {
+        this.$.toast.text = 'Transaction split';
+        this.$.toast.open();
         // TODO(robert): Apply changes to model.
+      }
+      _toastTxnEditSuccess() {
+        this.$.toast.text = 'Transaction updated';
+        this.$.toast.open();
+      }
+      _toastTxnEditFailed(evt) {
+        this.$.toast.text = 'Transaction update failed';
+        this.$.toast.open();
       }
     }
     window.customElements.define(PluotTxns.is, PluotTxns);

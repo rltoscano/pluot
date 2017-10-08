@@ -1,0 +1,132 @@
+<link rel="import" href="../../bower_components/polymer/polymer-element.html">
+
+<link rel="import" href="../pluot-app/pluot-format.html">
+<link rel="import" href="../pluot-app/pluot-globals.html">
+
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-icons/communication-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/editor-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/image-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/maps-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/places-icons.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/paper-item/paper-icon-item.html">
+<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
+
+<dom-module id="pluot-txn">
+  <template>
+    <style include="iron-flex iron-flex-alignment">
+      :host {
+        font-family: sans-serif;
+        padding: 16px;
+        overflow: hidden;
+        @apply(--layout-horizontal);
+        @apply(--layout-center);
+      }
+      paper-listbox {
+        padding: 0;
+      }
+      paper-item-icon {
+        padding: 8px;
+        cursor: pointer;
+      }
+      paper-input {
+        padding-left: 16px;
+        --paper-input-container: {
+          padding: 0;
+          vertical-align: middle;
+        };
+        --paper-input-container-input: {
+          cursor: text;
+          vertical-align: top;
+        };
+      }
+      paper-input[readonly] {
+        --paper-input-container-underline: {
+          border: none;
+        };
+        --paper-input-container-input: {
+          cursor: pointer;
+          vertical-align: top;
+        };
+      }
+      .subtitle {
+        font-size: 75%;
+        color: gray;
+      }
+      .category-option {
+        width: 80px;
+        height: 80px;
+        padding:8px;
+        cursor: pointer;
+      }
+    </style>
+
+    <pluot-globals id="globals"></pluot-globals>
+
+    <template is="dom-if" if="[[!_selectingCategory]]">
+      <paper-icon-button icon="[[_computeIcon(_category)]]" toggles active="{{_selectingCategory}}"></paper-icon-button>
+      <paper-input class="flex" value="{{_name}}" readonly$="[[!_editingName]]" focused="{{_editingName}}"></paper-input>
+      <template is="dom-if" if="[[txn.splitSourceId]]">
+        <iron-icon icon="communication:call-split"></iron-icon>
+      </template>
+      <div class="layout vertical end" style="width: 75px">
+        <div>[[_formatAmount(txn.amount)]]</div>
+        <div class="subtitle">[[_formatDate(txn.postDate)]]</div>
+      </div>
+    </template>
+
+    <template is="dom-if" if="[[_selectingCategory]]" restamp>
+      <paper-listbox class="layout horizontal center wrap" selected="{{_category}}" attr-for-selected="code" on-selected-changed="_stopSelectingCategory">
+        <template is="dom-repeat" items="[[$.globals.categories]]">
+          <div code="[[item.code]]" class="layout vertical center wrap category-option">
+            <iron-icon icon="[[item.icon]]"></iron-icon>
+            <div class="subtitle" style="text-align: center;">[[item.displayName]]</div>
+          </paper-item-icon>
+        </template>
+      </paper-listbox>
+    </template>
+
+  </template>
+
+  <script>
+    class PluotTxn extends PluotFormat(Polymer.Element) {
+      static get is() { return 'pluot-txn'; }
+      static get properties() {
+        return {
+          txn: { type: Object, value: null, observer: '_updateModel' },
+          _selectingCategory: { type: Boolean, value: false },
+          _editingName: { type: Boolean, value: false },
+          _category: { type: Number, value: null, observer: '_dispatchCategoryChanged' },
+          _name: { type: String, value: null, observer: '_dispatchNameChanged' },
+        };
+      }
+      _updateModel(txn) {
+        this.setProperties({
+          _category: txn.userCategory || txn.category,
+          _name: this._formatDisplayName(txn),
+        });
+      }
+      _stopSelectingCategory() { this._selectingCategory = false; }
+      _dispatchCategoryChanged(newValue, oldValue) {
+        if (oldValue == null) {
+          return;
+        }
+        this.dispatchEvent(new CustomEvent('edit', {detail: {id: this.txn.id, field: 'category', value: newValue}}));
+      }
+      _dispatchNameChanged(newValue, oldValue) {
+        if (oldValue == null) {
+          return;
+        }
+        this.dispatchEvent(new CustomEvent('edit', {detail: {id: this.txn.id, field: 'name', value: newValue}}));
+      }
+      _computeIcon(category) {
+        return this.$.globals.categoryIcon(category);
+      }
+    }
+    window.customElements.define(PluotTxn.is, PluotTxn);
+  </script>
+</dom-module>

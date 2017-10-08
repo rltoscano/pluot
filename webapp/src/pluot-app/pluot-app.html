@@ -62,7 +62,6 @@
           <div main-title>Pluot</div>
           <iron-pages selected="[[appView]]">
             <div>
-              <paper-icon-button icon="image:edit" toggles disabled="[[!txnsCanEdit]]" active="{{txnsEditing}}"></paper-icon-button>
               <paper-icon-button icon="search" toggles active="{{txnsSearching}}"></paper-icon-button>
               <paper-icon-button icon="communication:call-split" toggles disabled="[[!txnsCanSplit]]" active="{{txnsSplitting}}"></paper-icon-button>
             </div>
@@ -77,7 +76,7 @@
       </app-header>
 
       <iron-pages selected="[[appView]]" class="flex layout vertical">
-        <pluot-txns class="flex" can-edit="{{txnsCanEdit}}" editing="{{txnsEditing}}" searching="{{txnsSearching}}" can-split="{{txnsCanSplit}}" splitting="{{txnsSplitting}}"></pluot-txns>
+        <pluot-txns class="flex" searching="{{txnsSearching}}" can-split="{{txnsCanSplit}}" splitting="{{txnsSplitting}}"></pluot-txns>
         <pluot-upload class="flex"></pluot-upload>
         <pluot-rules id="rules" class="flex" can-delete="{{rulesCanDelete}}" adding="{{rulesAdding}}"></pluot-rules>
         <pluot-agg class="flex"></pluot-agg>
@@ -102,7 +101,6 @@
       static get properties() {
         return {
           appView: { type: Number, value: 3, observer: '_closeDrawer' },
-          txnsEditing: { type: Boolean, value: false },
         };
       }
       _closeDrawer() {

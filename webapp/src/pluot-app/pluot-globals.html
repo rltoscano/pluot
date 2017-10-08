@@ -11,28 +11,28 @@
   <script>
     (function() {
       var categories = [
-        'Unknown',
-        'Uncategorized',
-        'Home Improvement',
-        'Eating Out',
-        'Groceries',
-        'Lifestyle',
-        'Health',
-        'Transportation',
-        'Residence',
-        'Bills',
-        'Travel',
-        'Gifts',
-        'Other Expense',
-        'Transfer',
-        'PayCheck',
-        'Bonus',
-        'Rentals',
-        'Other Income',
+        { displayName: 'Unknown', icon: '' },
+        { displayName: 'Uncategorized', icon: 'image:assistant-photo' },
+        { displayName: 'Home Improvement', icon: 'editor:format-paint' },
+        { displayName: 'Eating Out', icon: 'maps:restaurant' },
+        { displayName: 'Groceries', icon: 'maps:local-grocery-store' },
+        { displayName: 'Lifestyle', icon: 'image:tag-faces' },
+        { displayName: 'Health', icon: 'maps:local-pharmacy' },
+        { displayName: 'Transportation', icon: 'maps:train' },
+        { displayName: 'Residence', icon: 'home' },
+        { displayName: 'Bills', icon: 'lightbulb-outline' },
+        { displayName: 'Travel', icon: 'maps:flight' },
+        { displayName: 'Gifts', icon: 'card-giftcard' },
+        { displayName: 'Other Expense', icon: 'trending-down' },
+        { displayName: 'Transfer', icon: 'trending-flat' },
+        { displayName: 'Pay Check', icon: 'editor:attach-money' },
+        { displayName: 'Bonus', icon: 'editor:insert-emoticon' },
+        { displayName: 'Rentals', icon: 'places:business-center' },
+        { displayName: 'Other Income', icon: 'trending-up' },
       ];
       var categoryObjs = [];
-      for (var i = 0; i < categories.length; i++) {
-        categoryObjs.push({ code: i, displayName: categories[i] });
+      for (var i = 1; i < categories.length; i++) {
+        categoryObjs.push({ code: i, displayName: categories[i].displayName, icon: categories[i].icon });
       }
       class PluotGlobals extends Polymer.Element {
         static get is() { return 'pluot-globals'; }
@@ -48,11 +48,14 @@
           };
         }
         categoryName(code) {
-          return categories[code];
+          return this.categories[code-1].displayName;
         }
         categoryCode(displayName) {
           var c = this.categories.find(c => c.displayName == displayName);
           return c ? c.code : 0;
+        }
+        categoryIcon(code) {
+          return this.categories[code-1].icon;
         }
       }
       window.customElements.define(PluotGlobals.is, PluotGlobals);

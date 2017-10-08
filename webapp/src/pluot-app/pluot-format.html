@@ -5,10 +5,10 @@ PluotFormat = function(superClass) {
   return class extends superClass {
     _formatAmount(amount) {
       if (amount == 0) {
-        return "$0.00";
+        return "0.00";
       }
       var amountStr = String(amount);
-      return "$" + amountStr.substr(0, amountStr.length-2) + "." + amountStr.substr(-2);
+      return amountStr.substr(0, amountStr.length-2) + "." + amountStr.substr(-2);
     }
     _formatDate(str) {
       var d = new Date(Date.parse(str));
