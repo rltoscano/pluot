@@ -72,6 +72,8 @@
       }
       static get observers() { return [ '_updateSplits(_splitTxn, _txnModel)' ]; }
       _patch(evt) {
+        this.$.txnList.notifyResize();
+        console.log('Patching..');
         var body = { txn: {id: evt.detail.id}, fields: [] };
         if (evt.detail.field === 'name') {
           body.fields.push('userDisplayName');
