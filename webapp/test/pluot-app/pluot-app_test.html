@@ -10,7 +10,10 @@
     <script>
       var server = sinon.fakeServer.create();
       server.autoRespond = true;
-      server.respondWith('PATCH', /\/svc\/txns\/\d+/, JSON.stringify({}));
+      server.respondWith(
+          'PATCH',
+          /\/svc\/txns\/\d+/,
+          JSON.stringify({ txn: { id: 435 } }));
       server.respondWith(
           'GET',
           '/svc/txns',

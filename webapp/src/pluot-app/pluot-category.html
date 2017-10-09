@@ -2,23 +2,68 @@
 
 <link rel="import" href="../pluot-app/pluot-globals.html">
 
-<link rel="import" href="../../bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
-<link rel="import" href="../../bower_components/paper-item/paper-item.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-icons/communication-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/editor-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/image-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/maps-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/places-icons.html">
+<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../../bower_components/paper-item/paper-icon-item.html">
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
 
 <dom-module id="pluot-category">
   <template>
-    <style></style>
+    <style include="iron-flex iron-flex-alignment">
+      :host {
+        display: block;
+        font-family: sans-serif;
+      }
+      .subtitle {
+        font-size: 75%;
+        color: gray;
+      }
+      .category-option {
+        width: 74px;
+        height: 74px;
+        padding: 18px 8px 0 8px;
+        cursor: pointer;
+      }
+      .category-option.iron-selected {
+        background-color: #583759;
+        color: #fff;
+      }
+      .category-option.iron-selected .subtitle {
+        color: #fff;
+      }
+      paper-listbox {
+        padding: 0;
+      }
+    </style>
 
-    <pluot-globals id="globals" categories="{{categories}}"></pluot-globals>
+    <pluot-globals id="globals"></pluot-globals>
 
-    <paper-dropdown-menu label="Category">
-      <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{_model}}">
-        <template is="dom-repeat" items="[[categories]]" as="category">
-          <paper-item code$="[[category.code]]">[[category.displayName]]</paper-item>
+    <paper-icon-button
+        icon="[[_computeIcon(code)]]"
+        toggles
+        hidden$="[[selecting]]"
+        active="{{selecting}}"></paper-icon-button>
+
+    <template is="dom-if" if="[[selecting]]" restamp>
+      <paper-listbox
+          class="layout horizontal center wrap"
+          selected="{{code}}"
+          attr-for-selected="code"
+          on-iron-activate="_hideSelection">
+        <template is="dom-repeat" items="[[$.globals.categories]]">
+          <div code="[[item.code]]" class="layout vertical center category-option">
+            <iron-icon icon="[[item.icon]]"></iron-icon>
+            <div class="subtitle" style="text-align: center;">[[item.displayName]]</div>
+          </paper-item-icon>
         </template>
       </paper-listbox>
-    </paper-dropdown-menu>
+    </template>
 
   </template>
 
@@ -27,12 +72,12 @@
       static get is() { return 'pluot-category'; }
       static get properties() {
         return {
-          code: { type: Number, notify: true, value: null, observer: '_observeCode' },
-          _model: { type: String, value: null, observer: '_observeModel' },
+          code: { type: Number, notify: true, value: 1 },
+          selecting: { type: Boolean, value: false, notify: true },
         };
       }
-      _observeCode(newValue) { this._model = newValue; }
-      _observeModel(newValue) { this.code = (newValue == null) ? null : parseInt(newValue); }
+      _computeIcon(code) { return this.$.globals.categoryIcon(code); }
+      _hideSelection() { this.selecting = false; }
     }
     window.customElements.define(PluotCategory.is, PluotCategory);
   </script>

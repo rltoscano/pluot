@@ -9,6 +9,7 @@
     <style>
       paper-input {
         --paper-input-container-input-color: #fff;
+        --paper-input-container-focus-color: #fff;
         background-color: #583759;
         padding-left: 16px;
         padding-right: 16px;
@@ -32,24 +33,6 @@
       }
       reset() {
         this._queryStr = '';
-      }
-      filter(txn) {
-        if (txn.splits && txn.splits.length > 0) { // Hide split sources.
-          return false;
-        }
-        if (this.query.categories.length > 0) {
-          var cat = (txn.userCategory != 0) ? txn.userCategory : txn.category;
-          if (!this.query.categories.includes(cat)) {
-            return false;
-          }
-        }
-        if (this.query.after != null && this.query.after >= txn.postDate.substr(0, 10)) {
-          return false;
-        }
-        if (this.query.before != null && this.query.before <= txn.postDate.substr(0, 10)) {
-          return false;
-        }
-        return true;
       }
       _computeQuery(_queryStr) {
         var tokens = _queryStr.split(' ');

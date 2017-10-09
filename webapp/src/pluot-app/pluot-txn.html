@@ -1,20 +1,12 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
+<link rel="import" href="../pluot-app/pluot-category.html">
 <link rel="import" href="../pluot-app/pluot-format.html">
-<link rel="import" href="../pluot-app/pluot-globals.html">
 
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-icons/communication-icons.html">
-<link rel="import" href="../../bower_components/iron-icons/editor-icons.html">
-<link rel="import" href="../../bower_components/iron-icons/image-icons.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
-<link rel="import" href="../../bower_components/iron-icons/maps-icons.html">
-<link rel="import" href="../../bower_components/iron-icons/places-icons.html">
-<link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
-<link rel="import" href="../../bower_components/paper-item/paper-item.html">
-<link rel="import" href="../../bower_components/paper-item/paper-icon-item.html">
-<link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
 
 <dom-module id="pluot-txn">
   <template>
@@ -22,16 +14,11 @@
       :host {
         font-family: sans-serif;
         padding: 16px;
+      }
+      #main {
         overflow: hidden;
         @apply(--layout-horizontal);
         @apply(--layout-center);
-      }
-      paper-listbox {
-        padding: 0;
-      }
-      paper-item-icon {
-        padding: 8px;
-        cursor: pointer;
       }
       paper-input {
         padding-left: 16px;
@@ -57,38 +44,28 @@
         font-size: 75%;
         color: gray;
       }
-      .category-option {
-        width: 80px;
-        height: 80px;
-        padding:8px;
-        cursor: pointer;
-      }
     </style>
 
-    <pluot-globals id="globals"></pluot-globals>
-
-    <template is="dom-if" if="[[!_selectingCategory]]">
-      <paper-icon-button icon="[[_computeIcon(_category)]]" toggles active="{{_selectingCategory}}"></paper-icon-button>
-      <paper-input class="flex" value="{{_name}}" readonly$="[[!_editingName]]" focused="{{_editingName}}" on-change="_dispatchNameChanged"></paper-input>
+    <div id="main">
+      <pluot-category code="{{_category}}" selecting="{{_selectingCategory}}"></pluot-category>
+      <paper-input
+          class="flex"
+          value="{{_name}}"
+          readonly$="[[!_editingName]]"
+          focused="{{_editingName}}"
+          on-change="_dispatchNameChanged"
+          hidden$="[[_selectingCategory]]"></paper-input>
       <template is="dom-if" if="[[txn.splitSourceId]]">
-        <iron-icon icon="communication:call-split"></iron-icon>
+        <iron-icon icon="communication:call-split" hidden$="[[_selectingCategory]]"></iron-icon>
       </template>
-      <div class="layout vertical end" style="width: 75px">
-        <div>[[_formatAmount(txn.amount)]]</div>
-        <div class="subtitle">[[_formatDate(txn.postDate)]]</div>
+      <div class="layout vertical end" style="width: 65px;">
+        <div
+            on-tap="_dispatchSplit"
+            style="cursor: pointer;"
+            hidden$="[[_selectingCategory]]">[[_formatAmount(txn.amount)]]</div>
+        <div class="subtitle" hidden$="[[_selectingCategory]]">[[_formatDate(txn.postDate)]]</div>
       </div>
-    </template>
-
-    <template is="dom-if" if="[[_selectingCategory]]" restamp>
-      <paper-listbox class="layout horizontal center wrap" selected="{{_category}}" attr-for-selected="code" on-selected-changed="_dispatchCategoryChanged">
-        <template is="dom-repeat" items="[[$.globals.categories]]">
-          <div code="[[item.code]]" class="layout vertical center wrap category-option">
-            <iron-icon icon="[[item.icon]]"></iron-icon>
-            <div class="subtitle" style="text-align: center;">[[item.displayName]]</div>
-          </paper-item-icon>
-        </template>
-      </paper-listbox>
-    </template>
+    </div>
 
   </template>
 
@@ -98,36 +75,38 @@
       static get properties() {
         return {
           txn: { type: Object, value: null, observer: '_updateModel' },
-          _selectingCategory: { type: Boolean, value: false },
+          _selectingCategory: { type: Boolean, value: false, observer: '_dispatchResize' },
           _editingName: { type: Boolean, value: false },
-          _category: { type: Number, value: null },
+          _category: { type: Number, value: 1, observer: '_maybeDispatchCategory' },
           _name: { type: String, value: null },
         };
       }
       _updateModel(txn) {
-        if (txn == null) {
-          return;
+        if (txn != null) {
+          this.setProperties({
+            _category: txn.userCategory || txn.category,
+            _name: this._formatDisplayName(txn),
+          });
         }
-        this.setProperties({
-          _category: txn.userCategory || txn.category,
-          _name: this._formatDisplayName(txn),
-        });
-      }
-      _dispatchCategoryChanged(evt) {
-        this._selectingCategory = false;
-        console.log('Category selection changed: ' + evt.detail.value);
-        this.dispatchEvent(
-            new CustomEvent(
-                'edit', {detail: {id: this.txn.id, field: 'category', value: evt.detail.value}}));
       }
       _dispatchNameChanged(evt) {
         console.log('Name changed: ' + evt.target.value);
         this.dispatchEvent(
             new CustomEvent(
-                'edit', {detail: {id: this.txn.id, field: 'name', value: evt.target.value}}));
+                'edit', {detail: {id: this.txn.id, field: 'name', value: evt.target.value }}));
       }
-      _computeIcon(category) {
-        return this.$.globals.categoryIcon(category);
+      _dispatchSplit() {
+        console.log('Split requested: ' + this.txn.id);
+        this.dispatchEvent(new CustomEvent('split', {detail: { id: this.txn.id }}));
+      }
+      _dispatchResize() { this.dispatchEvent(new CustomEvent('resize')); }
+      _maybeDispatchCategory(newValue) {
+        if (this.txn && newValue !== (this.txn.userCategory || this.txn.category)) {
+          console.log('Category selection changed: ' + newValue);
+          this.dispatchEvent(
+              new CustomEvent(
+                  'edit', {detail: {id: this.txn.id, field: 'category', value: newValue }}));
+        }
       }
     }
     window.customElements.define(PluotTxn.is, PluotTxn);

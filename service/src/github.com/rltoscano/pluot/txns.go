@@ -70,6 +70,7 @@ func patchTxn(c context.Context, r *http.Request, u *user.User) (interface{}, er
 		return nil, pihen.Error{http.StatusBadRequest, err.Error()}
 	}
 	t := new(Txn)
+	t.ID = id
 	k := datastore.NewKey(c, "Txn", "", id, nil)
 	err = datastore.RunInTransaction(c, func(tc context.Context) error {
 		err = datastore.Get(c, k, t)

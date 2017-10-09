@@ -7,24 +7,22 @@
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
-<link rel="import" href="../../bower_components/paper-dialog-behavior/paper-dialog-behavior.html">
-<link rel="import" href="../../bower_components/paper-dialog-behavior/paper-dialog-shared-styles.html">
-<link rel="import" href="../../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="../../bower_components/paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 
 <dom-module id="pluot-split">
   <template>
-    <style include="paper-dialog-shared-styles iron-flex iron-flex-alignment">
+    <style include="iron-flex iron-flex-alignment">
       :host {
+        display: block;
         padding: 16px;
       }
       .splitamount {
-        width: 50px;
+        width: 60px;
       }
-      .splitcat {
-        width: 80px;
+      paper-item {
+        padding: 0;
       }
       paper-item > * {
         margin-right: 16px;
@@ -32,62 +30,78 @@
       paper-item > *:last-child {
         margin-right: 0;
       }
-      paper-dialog-scrollable {
-        --paper-dialog-scrollable: {
-          padding: 0px;
-        }
+      paper-button {
+        margin: 0;
       }
-      paper-dialog-scrollable > paper-item {
-        padding: 0px;
+      #doneButton {
+        background-color: #583759;
+        color: #fff;
+      }
+      #doneButton[disabled] {
+        background-color: #ab9bac;
       }
     </style>
 
-    <h2 class="layout horizontal">
+    <h2 class="layout horizontal" style="padding: 0;">
       <div class="flex">[[_formatDisplayName(splitTxn)]]</div>
-      <div style="padding-left: 32px;">Remaining: [[_formatAmount(_remainingSplitAmount)]]</div>
+      <div style="padding-left: 32px;">Remaining: [[_formatAmount(_remaining)]]</div>
     </h2>
-    <paper-dialog-scrollable>
-      <template is="dom-repeat" items="{{splits}}">
-        <paper-item class="layout horizontal">
-          <paper-input label="Name" class="flex" type="text" value="{{item.displayName}}" autofocus></paper-input>
-          <pluot-category code="{{item.category}}"></pluot-category>
-          <pluot-amount class="splitamount" amount="{{item.amount}}"></pluot-amount>
-          <paper-icon-button icon="close" on-tap="_onRemoveSplitTap" data-index$="[[index]]"></paper-icon-button>
-        </paper-item>
-      </template>
-      <paper-button on-tap="_onAddSplitTap" hidden$="[[!_remainingSplitAmount]]">Add Split</paper-button>
-    </paper-dialog-scrollable>
-    <div class="buttons">
-      <paper-button dialog-dismiss>Cancel</paper-button>
-      <paper-button dialog-confirm disabled$="[[_computeSplitButtonDisabled(_remainingSplitAmount, splits.*)]]">Split</paper-button>
+
+    <template is="dom-repeat" items="{{splits}}">
+      <paper-item class="layout horizontal">
+        <pluot-category
+            code="{{item.category}}"
+            selecting="{{item._selectingCategory}}"></pluot-category>
+        <paper-input
+            label="Name"
+            class="flex"
+            type="text"
+            value="{{item.displayName}}"
+            hidden$="[[item._selectingCategory]]"></paper-input>
+        <pluot-amount
+            class="splitamount"
+            amount="{{item.amount}}"
+            hidden$="[[item._selectingCategory]]"></pluot-amount>
+        <paper-icon-button
+            icon="close"
+            on-tap="_onRemoveSplitTap"
+            data-index$="[[index]]"
+            hidden$="[[item._selectingCategory]]"></paper-icon-button>
+      </paper-item>
+    </template>
+    <paper-button on-tap="_onAddSplitTap" hidden$="[[!_remaining]]">Add Split</paper-button>
+    <div style="margin-top: 16px;">
+      <paper-button
+          id="doneButton"
+          disabled$="[[_computeSplitButtonDisabled(_remaining, splits.*)]]"
+          on-tap="_dispatchDone">Done</paper-button>
     </div>
 
   </template>
 
   <script>
-    class PluotSplit extends PluotFormat(Polymer.mixinBehaviors([Polymer.PaperDialogBehavior], Polymer.Element)) {
+    class PluotSplit extends PluotFormat(Polymer.Element) {
       static get is() { return 'pluot-split'; }
       static get properties() {
         return {
           splitTxn: { type: Object, value: { userDisplayName: "", amount: 0 } },
           splits: { type: Array, notify: true, value: [] },
-          _remainingSplitAmount: { type: Number, computed: '_computeRemainingSplitAmount(splitTxn, splits.*)' },
+          _remaining: { type: Number, computed: '_computeRemaining(splitTxn, splits.*)' },
         };
       }
-      _computeRemainingSplitAmount(splitTxn, splitsProp) {
-        return splitsProp.base.reduce((remaining, split) => remaining - split.amount, splitTxn.amount);
+      _computeRemaining(splitTxn, splitsProp) {
+        return splitsProp.base.reduce(
+            (remaining, split) => remaining - split.amount, splitTxn.amount);
       }
-      _computeSplitButtonDisabled(_remainingSplitAmount, splitsProp) {
-        return (_remainingSplitAmount != 0) || splitsProp.base.some(s => !s.displayName || !s.category || !s.amount);
+      _computeSplitButtonDisabled(_remaining, splitsProp) {
+        return (_remaining != 0) ||
+            splitsProp.base.some(s => !s.displayName || !s.category || !s.amount);
       }
       _onAddSplitTap(evt) {
-        this.push('splits', { displayName: '', category: null, amount: this._remainingSplitAmount });
-        setTimeout(this.refit.bind(this), 0);
+        this.push('splits', { displayName: '', category: 1, amount: this._remaining });
       }
-      _onRemoveSplitTap(evt) {
-        this.splice('splits', evt.currentTarget.dataset.index, 1);
-        setTimeout(this.refit.bind(this), 0);
-      }
+      _onRemoveSplitTap(evt) { this.splice('splits', evt.currentTarget.dataset.index, 1); }
+      _dispatchDone() { this.dispatchEvent(new CustomEvent('done')); }
     }
     window.customElements.define(PluotSplit.is, PluotSplit);
   </script>
