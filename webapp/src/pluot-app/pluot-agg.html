@@ -21,16 +21,26 @@
     <pluot-globals id="globals" categories="{{_categories}}"></pluot-globals>
     <div>
       <paper-dropdown-menu label="Time Window">
-        <paper-listbox slot="dropdown-content" attr-for-selected="timeWindow" selected="{{_timeWindow}}">
+        <paper-listbox
+            slot="dropdown-content"
+            attr-for-selected="timeWindow"
+            selected="{{_timeWindow}}">
           <paper-item timeWindow="last30Days">Last 30 days</paper-item>
           <paper-item timeWindow="lastMonth">Last month</paper-item>
           <paper-item timeWindow="last6Months">Last 6 months</paper-item>
         </paper-listbox>
       </paper-dropdown-menu>
     </div>
-    <google-chart type="pie" options='{"pieHole": 0.3}' rows="[[_computeTotals(_aggResp, _categories)]]"
-        cols='[{"label": "Category", "type": "string"},{"label": "Total", "type": "number"}]'></google-chart>
-    <google-chart type="column" rows="[[_computeMonthly(_aggResp)]]"
+    <google-chart
+        id="donut"
+        type="pie"
+        options='{"pieHole": 0.3}'
+        rows="[[_computeTotals(_aggResp, _categories)]]"
+        cols='[{"label": "Category", "type": "string"},{"label": "Total", "type": "number"}]'
+        on-google-chart-select='_navigateToTxnsPage'></google-chart>
+    <google-chart
+        type="column"
+        rows="[[_computeMonthly(_aggResp)]]"
         cols='[{"label": "Month", "type": "string"}, {"label": "Spending", "type": "number"}, {"label": "Income", "type": "number"}]'></google-chart>
     <iron-ajax
         auto
@@ -39,7 +49,7 @@
         handle-as="json"
         debounce-duration="1000"
         url="[[$.globals.urlPrefix]]aggs"
-        body="[[_computeAggReq(_timeWindow)]]"
+        body="[[_computeAggReq(_start, _end)]]"
         last-response="{{_aggResp}}"></iron-ajax>
   </template>
   <script>
@@ -49,35 +59,32 @@
       static get properties() {
         return {
           _aggResp: { type: Object, value: { totals: [], months: [] } },
-          _timeWindow: { type: String, value: "last30Days" },
           _categories: { type: Array, value: [] },
+          _end: { type: String, computed: '_computeEnd(_timeWindow)' },
+          _start: { type: String, computed: '_computeStart(_timeWindow)' },
+          _timeWindow: { type: String, value: "last30Days" },
         };
       }
-      _computeAggReq(_timeWindow) {
-        var start, end;
-        switch (_timeWindow) {
-          case "last30Days":
-            end = new Date();
-            start = new Date(end);
-            start.setDate(start.getDate() - 30);
-            break;
-          case "lastMonth":
-            var now = new Date();
-            end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            start = new Date(end);
-            start.setMonth(start.getMonth()-1);
-            break;
-          case "last6Months":
-            var now = new Date();
-            end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            start = new Date(end);
-            start.setMonth(start.getMonth()-6);
-            break;
-          default:
-            console.error("unexpected time window: " + _timeWindow);
-            return null;
+      _computeAggReq(_start, _end) {
+        return { start: _start, end: _end };
+      }
+      _computeEnd(_timeWindow) {
+        var end = new Date();
+        if (_timeWindow == 'lastMonth' || _timeWindow == 'last6Months') {
+          end = new Date(end.getFullYear(), end.getMonth());
         }
-        return { start: start.toUTCString(), end: end.toUTCString() };
+        return end.toUTCString();
+      }
+      _computeStart(_timeWindow) {
+        var start = new Date();
+        if (_timeWindow == 'last30Days') {
+          start.setDate(start.getDate() - 30);
+        } else if (_timeWindow == 'lastMonth') {
+          start = new Date(start.getFullYear(), start.getMonth() - 1);
+        } else if (_timeWindow == 'last6Months') {
+          start = new Date(start.getFullYear(), start.getMonth() - 6);
+        }
+        return start.toUTCString();
       }
       _computeTotals(_aggResp, _categories) {
         var totals = _categories.
@@ -87,6 +94,27 @@
       }
       _computeMonthly(_aggResp) {
         return _aggResp.months.map(m => [m.month, m.expense / 100.0, m.income / 100.0]);
+      }
+      _navigateToTxnsPage(evt) {
+        // A delayed function is used due to a bug where donut's selection property is not updated
+        // before the event fires.
+        setTimeout(function() {
+          var selection = this.$.donut.selection;
+          if (selection.length > 0) {
+            var start = new Date(this._start);
+            var end = new Date(this._end);
+            var categoryName = this.$.globals.categoryName(selection[0].row + 1);
+            var queryStr =
+                `cat:${categoryName} `
+                + `after:${String(start.getFullYear()).padStart(4, '0')}`
+                + `-${String(start.getMonth() + 1).padStart(2, '0')}`
+                + `-${String(start.getDate()).padStart(2, '0')} `
+                + `before:${String(end.getFullYear()).padStart(4, '0')}`
+                + `-${String(end.getMonth() + 1).padStart(2, '0')}`
+                + `-${String(end.getDate()).padStart(2, '0')}`;
+            window.location.hash = '/txns/' + queryStr;
+          }
+        }.bind(this), 0);
       }
     }
     window.customElements.define(PluotAgg.is, PluotAgg);
