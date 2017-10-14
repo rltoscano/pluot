@@ -22,9 +22,9 @@
     <div>
       <paper-dropdown-menu label="Time Window">
         <paper-listbox slot="dropdown-content" attr-for-selected="timeWindow" selected="{{_timeWindow}}">
-          <paper-item timeWindow="0">Last 30 days</paper-item>
-          <paper-item timeWindow="1">Last month</paper-item>
-          <paper-item timeWindow="2">Last 6 months</paper-item>
+          <paper-item timeWindow="last30Days">Last 30 days</paper-item>
+          <paper-item timeWindow="lastMonth">Last month</paper-item>
+          <paper-item timeWindow="last6Months">Last 6 months</paper-item>
         </paper-listbox>
       </paper-dropdown-menu>
     </div>
@@ -32,7 +32,12 @@
         cols='[{"label": "Category", "type": "string"},{"label": "Total", "type": "number"}]'></google-chart>
     <google-chart type="column" rows="[[_computeMonthly(_aggResp)]]"
         cols='[{"label": "Month", "type": "string"}, {"label": "Spending", "type": "number"}, {"label": "Income", "type": "number"}]'></google-chart>
-    <iron-ajax auto method="POST" content-type="application/json" handle-as="json" debounce-duration="1000"
+    <iron-ajax
+        auto
+        method="POST"
+        content-type="application/json"
+        handle-as="json"
+        debounce-duration="1000"
         url="[[$.globals.urlPrefix]]aggs"
         body="[[_computeAggReq(_timeWindow)]]"
         last-response="{{_aggResp}}"></iron-ajax>
@@ -44,11 +49,36 @@
       static get properties() {
         return {
           _aggResp: { type: Object, value: { totals: [], months: [] } },
-          _timeWindow: { type: String, value: "0" },
+          _timeWindow: { type: String, value: "last30Days" },
           _categories: { type: Array, value: [] },
         };
       }
-      _computeAggReq(_timeWindow) { return { timeWindow: parseInt(_timeWindow) }; }
+      _computeAggReq(_timeWindow) {
+        var start, end;
+        switch (_timeWindow) {
+          case "last30Days":
+            end = new Date();
+            start = new Date(end);
+            start.setDate(start.getDate() - 30);
+            break;
+          case "lastMonth":
+            var now = new Date();
+            end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            start = new Date(end);
+            start.setMonth(start.getMonth()-1);
+            break;
+          case "last6Months":
+            var now = new Date();
+            end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            start = new Date(end);
+            start.setMonth(start.getMonth()-6);
+            break;
+          default:
+            console.error("unexpected time window: " + _timeWindow);
+            return null;
+        }
+        return { start: start.toUTCString(), end: end.toUTCString() };
+      }
       _computeTotals(_aggResp, _categories) {
         var totals = _categories.
             filter(c => !PluotAgg.ignoredCategories.includes(c.code)).
