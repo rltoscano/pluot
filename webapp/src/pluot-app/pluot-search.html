@@ -18,7 +18,10 @@
 
     <pluot-globals id="globals"></pluot-globals>
 
-    <paper-input label="Search (e.g. cat:Groceries after:2017-08-21)" value="{{_queryStr}}" autofocus></paper-input>
+    <paper-input
+        label="Search (e.g. cat:Groceries after:2017-08-21)"
+        value="{{queryStr}}"
+        autofocus></paper-input>
 
   </template>
 
@@ -27,15 +30,17 @@
       static get is() { return 'pluot-search'; }
       static get properties() {
         return {
-          query: { type: Object, computed: '_computeQuery(_queryStr)', notify: true },
-          _queryStr: { type: String, value: '' },
+          query: {
+            type: Object,
+            notify: true,
+            readOnly: true,
+            computed: '_computeQuery(queryStr)'
+          },
+          queryStr: { type: String, notify: true, value: '' },
         };
       }
-      reset() {
-        this._queryStr = '';
-      }
-      _computeQuery(_queryStr) {
-        var tokens = _queryStr.split(' ');
+      _computeQuery(queryStr) {
+        var tokens = queryStr.split(' ');
         var query = {
           displayName: "",
           categories: [],

@@ -57,18 +57,40 @@
     </style>
 
     <app-location route="{{route}}" use-hash-as-path></app-location>
-    <app-route id="route" route="{{route}}" pattern="/:page" data="{{data}}"></app-route>
+    <app-route
+        id="route"
+        route="{{route}}"
+        pattern="/:page"
+        data="{{data}}"
+        tail="{{subroute}}"></app-route>
 
     <app-header-layout id="main" fullbleed>
 
       <app-header slot="header" fixed effects="waterfall">
         <iron-pages selected="[[data.page]]" attr-for-selected="page">
           <app-toolbar page="txns">
-            <paper-icon-button icon="menu" toggles active="{{drawerOpened}}" hidden$="[[txnsSplitting]]"></paper-icon-button>
-            <paper-icon-button icon="arrow-back" toggles active="{{!txnsSplitting}}" hidden$="[[!txnsSplitting]]"></paper-icon-button>
+            <paper-icon-button
+                icon="menu"
+                toggles
+                active="{{drawerOpened}}"
+                hidden$="[[txnsSplitting]]"></paper-icon-button>
+            <paper-icon-button
+                icon="arrow-back"
+                toggles
+                active="{{!txnsSplitting}}"
+                hidden$="[[!txnsSplitting]]"></paper-icon-button>
             <div main-title hidden$="[[txnsSearching]]">Pluot</div>
-            <pluot-search id="txnSearch" class="flex" query="{{txnsQuery}}" hidden$="[[!txnsSearching]]"></pluot-search>
-            <paper-icon-button icon="search" toggles active="{{txnsSearching}}" hidden$="[[txnsSplitting]]"></paper-icon-button>
+            <pluot-search
+                id="txnSearch"
+                class="flex"
+                query="{{txnsQuery}}"
+                query-str="{{queryStr}}"
+                hidden$="[[!txnsSearching]]"></pluot-search>
+            <paper-icon-button
+                icon="search"
+                toggles
+                active="{{txnsSearching}}"
+                hidden$="[[txnsSplitting]]"></paper-icon-button>
           </app-toolbar>
           <app-toolbar page="upload">
             <paper-icon-button icon="menu" toggles active="{{drawerOpened}}"></paper-icon-button>
@@ -78,7 +100,10 @@
             <paper-icon-button icon="menu" toggles active="{{drawerOpened}}"></paper-icon-button>
             <div main-title>Pluot</div>
             <paper-icon-button icon="add" toggles active="{{rulesAdding}}"></paper-icon-button>
-            <paper-icon-button icon="delete" disabled="[[!rulesCanDelete]]" on-tap="rules.delete()"></paper-icon-button>
+            <paper-icon-button
+                icon="delete"
+                disabled="[[!rulesCanDelete]]"
+                on-tap="rules.delete()"></paper-icon-button>
           </app-toolbar>
           <app-toolbar page="agg">
             <paper-icon-button icon="menu" toggles active="{{drawerOpened}}"></paper-icon-button>
@@ -88,16 +113,29 @@
       </app-header>
 
       <iron-pages selected="[[data.page]]" class="flex layout vertical" attr-for-selected="page">
-        <pluot-txns page="txns" class="flex" splitting="{{txnsSplitting}}" query="[[txnsQuery]]"></pluot-txns>
+        <pluot-txns
+            page="txns"
+            class="flex"
+            splitting="{{txnsSplitting}}"
+            query="[[txnsQuery]]"></pluot-txns>
         <pluot-upload page="upload" class="flex"></pluot-upload>
-        <pluot-rules page="rules" id="rules" class="flex" can-delete="{{rulesCanDelete}}" adding="{{rulesAdding}}"></pluot-rules>
+        <pluot-rules
+            page="rules"
+            id="rules"
+            class="flex"
+            can-delete="{{rulesCanDelete}}"
+            adding="{{rulesAdding}}"></pluot-rules>
         <pluot-agg page="agg" class="flex"></pluot-agg>
       </iron-pages>
 
     </app-header-layout>
 
     <app-drawer id="drawer" slot="drawer" opened="{{drawerOpened}}" align="start">
-      <paper-listbox selected="{{data.page}}" class="layout vertical" attr-for-selected="page" on-selected-changed="_closeDrawer">
+      <paper-listbox
+          selected="{{data.page}}"
+          class="layout vertical"
+          attr-for-selected="page"
+          on-selected-changed="_closeDrawer">
         <paper-item page="txns">Transactions</paper-item>
         <paper-item page="upload">Upload</paper-item>
         <paper-item page="rules">Rules</paper-item>
@@ -113,6 +151,8 @@
       static get properties() {
         return {
           txnsSearching: { type: Boolean, value: false, observer: '_clearTxnSearch' },
+          subroute: { type: Object, observer: '_updateTxnSearch' },
+          queryStr: { type: String, observer: '_updateSubrouteToQueryStr' },
         };
       }
       ready() {
@@ -121,8 +161,25 @@
           this.set('route.path', "/agg");
         }
       }
+      _updateTxnSearch(subroute) {
+        if (subroute.path && subroute.path.substr(1)) {
+          this.txnsSearching = true;
+          this.$.txnSearch.queryStr = subroute.path.substr(1);
+        } else {
+          this.txnsSearching = false;
+        }
+      }
+      _updateSubrouteToQueryStr(queryStr) {
+        var subroutePath;
+        if (queryStr) {
+          subroutePath = '/' + queryStr;
+        } else {
+          subroutePath = '';
+        }
+        this.set('subroute.path', subroutePath);
+      }
       _closeDrawer() { this.$.drawer.opened = false; }
-      _clearTxnSearch() { this.$.txnSearch.reset(); }
+      _clearTxnSearch() { this.$.txnSearch.queryStr = ''; }
     }
     window.customElements.define(PluotApp.is, PluotApp);
   </script>
