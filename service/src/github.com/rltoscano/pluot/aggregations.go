@@ -2,6 +2,7 @@ package pluot
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -21,7 +22,9 @@ const (
 // ComputeAggregationRequest is a JSON request for the ComputeAggregation
 // method.
 type ComputeAggregationRequest struct {
-	TimeWindow int `json:"timeWindow"`
+	TimeWindow int    `json:"timeWindow"`
+	Start      string `json:"start"`
+	End        string `json:"end"`
 }
 
 // ComputeAggregationResponse contains the total and average aggregations.
@@ -40,25 +43,37 @@ type MonthAgg struct {
 func computeAggregation(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
 	req := ComputeAggregationRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, pihen.Error{http.StatusBadRequest, err.Error()}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: err.Error()}
 	}
 	var start, end time.Time
-	pst, _ := time.LoadLocation("America/Los_Angeles")
-	switch req.TimeWindow {
-	case TimeWindowLast30Days:
-		end = time.Now()
-		start = end.Add(-time.Hour * 24 * 30)
-		break
-	case TimeWindowLastMonth:
-		now := time.Now()
-		end = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, pst)
-		start = end.AddDate(0, -1, 0)
-		break
-	case TimeWindowLast6Months:
-		now := time.Now()
-		end = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, pst)
-		start = end.AddDate(0, -6, 0)
-		break
+	if req.Start != "" && req.End != "" {
+		var err error
+		start, err = time.Parse("Mon, 02 Jan 2006 15:04:05 MST", req.Start)
+		if err != nil {
+			return nil, pihen.Error{Status: http.StatusBadRequest, Message: fmt.Sprintf("Invalid `start` value: %v", err)}
+		}
+		end, err = time.Parse("Mon, 02 Jan 2006 15:04:05 MST", req.End)
+		if err != nil {
+			return nil, pihen.Error{Status: http.StatusBadRequest, Message: fmt.Sprintf("Invalid `end` value: %v", err)}
+		}
+	} else {
+		pst, _ := time.LoadLocation("America/Los_Angeles")
+		switch req.TimeWindow {
+		case TimeWindowLast30Days:
+			end = time.Now()
+			start = end.Add(-time.Hour * 24 * 30)
+			break
+		case TimeWindowLastMonth:
+			now := time.Now()
+			end = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, pst)
+			start = end.AddDate(0, -1, 0)
+			break
+		case TimeWindowLast6Months:
+			now := time.Now()
+			end = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, pst)
+			start = end.AddDate(0, -6, 0)
+			break
+		}
 	}
 	txns, err := loadTxns(c, start, end, CategoryUnknown, true)
 	if err != nil {
