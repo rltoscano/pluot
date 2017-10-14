@@ -40,7 +40,7 @@
         };
       }
       _computeQuery(queryStr) {
-        var tokens = queryStr.split(' ');
+        var tokens = this._parse(queryStr);
         var query = {
           displayName: "",
           categories: [],
@@ -54,11 +54,40 @@
           } else if (token.startsWith('after:')) {
             query.after = token.substr('after:'.length);
           } else if (token.startsWith('before:')) {
-            query.before = token.substr('before:'.length);;
+            query.before = token.substr('before:'.length);
           }
           // TODO(robert): Support searching by display name.
         });
         return query;
+      }
+      _parse(queryStr) {
+        var tokens = queryStr.split(' ');
+        var quoteJoinedTokens = [];
+        var i = 0;
+        for (var i = 0; i < tokens.length; i++) {
+          if (!tokens[i].includes('"')) {
+            quoteJoinedTokens.push(tokens[i]);
+            continue;
+          }
+          // Scan ahead.
+          var j = i + 1;
+          for (; j < tokens.length; j++) {
+            if (tokens[j].includes('"')) {
+              break;
+            }
+          }
+          if (j == tokens.length) {
+            quoteJoinedTokens.push(tokens[i].replace(/"/g, ''));
+            continue;
+          }
+          var joinedToken = tokens[i];
+          for (var k = i + 1; k <= j; k++) {
+            joinedToken += ' ' + tokens[k];
+          }
+          quoteJoinedTokens.push(joinedToken.replace(/"/g, ''));
+          i = j;
+        }
+        return quoteJoinedTokens;
       }
     }
     window.customElements.define(PluotSearch.is, PluotSearch);

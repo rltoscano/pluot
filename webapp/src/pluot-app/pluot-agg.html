@@ -105,7 +105,7 @@
             var end = new Date(this._end);
             var categoryName = this.$.globals.categoryName(selection[0].row + 1);
             var queryStr =
-                `cat:${categoryName} `
+                `cat:"${categoryName}" `
                 + `after:${String(start.getFullYear()).padStart(4, '0')}`
                 + `-${String(start.getMonth() + 1).padStart(2, '0')}`
                 + `-${String(start.getDate()).padStart(2, '0')} `
