@@ -113,6 +113,7 @@
                 + `-${String(end.getMonth() + 1).padStart(2, '0')}`
                 + `-${String(end.getDate()).padStart(2, '0')}`;
             window.location.hash = '/txns/' + queryStr;
+            this.$.donut.selection = [];
           }
         }.bind(this), 0);
       }
