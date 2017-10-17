@@ -97,13 +97,30 @@
             <div main-title>Pluot</div>
           </app-toolbar>
           <app-toolbar page="rules">
-            <paper-icon-button icon="menu" toggles active="{{drawerOpened}}"></paper-icon-button>
-            <div main-title>Pluot</div>
-            <paper-icon-button icon="add" toggles active="{{rulesAdding}}"></paper-icon-button>
+            <paper-icon-button
+                icon="menu"
+                toggles
+                active="{{drawerOpened}}"
+                hidden$="[[rulesAdding]]"></paper-icon-button>
+            <paper-icon-button
+                icon="arrow-back"
+                toggles
+                active="{{!rulesAdding}}"
+                hidden$="[[!rulesAdding]]"></paper-icon-button>
+            <div main-title hidden$="[[rulesAdding]]">Pluot</div>
+            <div main-title hidden$="[[!rulesAdding]]"></div>
+            <paper-icon-button
+                icon="add"
+                hidden$="[[rulesAdding]]"
+                on-tap="_rulesEditNew"></paper-icon-button>
             <paper-icon-button
                 icon="delete"
-                disabled="[[!rulesCanDelete]]"
-                on-tap="rules.delete()"></paper-icon-button>
+                hidden$="[[!rulesCanDelete]]"
+                on-tap="_rulesDelete"></paper-icon-button>
+            <paper-icon-button
+                icon="check"
+                hidden$="[[!rulesCanConfirm]]"
+                on-tap="_rulesConfirmEdit"></paper-icon-button>
           </app-toolbar>
           <app-toolbar page="agg">
             <paper-icon-button icon="menu" toggles active="{{drawerOpened}}"></paper-icon-button>
@@ -124,6 +141,7 @@
             id="rules"
             class="flex"
             can-delete="{{rulesCanDelete}}"
+            can-confirm="{{rulesCanConfirm}}"
             adding="{{rulesAdding}}"></pluot-rules>
         <pluot-agg page="agg" class="flex"></pluot-agg>
       </iron-pages>
@@ -180,6 +198,9 @@
       }
       _closeDrawer() { this.$.drawer.opened = false; }
       _clearTxnSearch() { this.$.txnSearch.queryStr = ''; }
+      _rulesEditNew() { this.$.rules.editNew(); }
+      _rulesDelete() { this.$.rules.delete(); }
+      _rulesConfirmEdit() { this.$.rules.confirmEdit(); }
     }
     window.customElements.define(PluotApp.is, PluotApp);
   </script>

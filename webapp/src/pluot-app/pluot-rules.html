@@ -1,10 +1,18 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
+<link rel="import" href="../pluot-app/pluot-category.html">
 <link rel="import" href="../pluot-app/pluot-globals.html">
-<link rel="import" href="../pluot-app/pluot-rule.html">
 
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../../bower_components/iron-icons/communication-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/editor-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/image-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/maps-icons.html">
+<link rel="import" href="../../bower_components/iron-icons/places-icons.html">
 <link rel="import" href="../../bower_components/iron-list/iron-list.html">
+<link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../../bower_components/paper-dialog/paper-dialog.html">
@@ -20,60 +28,98 @@
       :host {
         @apply(--layout-vertical);
         @apply(--layout-flex);
-      }
-      label {
         font-family: sans-serif;
-        font-size: 14pt;
+      }
+      h2 {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+      .rule-entry {
+        border-bottom: 1px solid #eee;
+      }
+      .pattern {
+        font-size: 16pt;
+        padding: 16px 16px 0 16px;
+        color: var(--primary-text-color);
+      }
+      .regexp {
+        color: var(--secondary-text-color);
+        font-size: 75%;
         padding: 16px;
       }
-      iron-list {
-        --iron-list-items-container: {
-          padding: 16px;
-        };
+      .display-name {
+        padding: 0 16px 0 16px;
+        font-size: 14pt;
+        color: var(--secondary-text-color);
       }
-      iron-list div {
-        padding: 16px 0 0 16px;
-        cursor: pointer;
+      .category {
+        padding: 16px;
+      }
+      .adding-page {
+        padding: 16px;
+      }
+      .adding-page > * {
+        margin-bottom: 16px;
       }
     </style>
 
     <pluot-globals id="globals"></pluot-globals>
 
-    <paper-dialog id="editDialog" class="layout vertical" opened="{{adding}}">
-      <paper-input label="Pattern" value="{{newRulePattern}}"></paper-input>
-      <paper-checkbox checked="{{newRuleRegexp}}">Regexp</paper-checkbox>
-      <paper-input label="Name" value="{{newRuleDisplayName}}"></paper-input>
-      <paper-dropdown-menu label="Category">
-        <paper-listbox slot="dropdown-content" attr-for-selected="code" selected="{{newRuleCategoryStr}}">
-          <template is="dom-repeat" items="[[$.globals.categories]]" as="category">
-            <paper-item code$="[[category.code]]">[[category.displayName]]</paper-item>
+    <iron-pages
+        class="flex layout vertical"
+        selected="[[_computePageToShow(adding)]]"
+        attr-for-selected="adding">
+      <div adding="false">
+        <h2>Proposed Rules</h2>
+        <template is="dom-repeat" items="[[listRuleProposalsResp.rules]]">
+          <div>
+            <div class="rule-entry layout vertical" on-tap="_editExisting" rule="[[item]]">
+              <div class="layout horizontal center">
+                <div class="pattern flex">[[item.pattern]]</div>
+                <template is="dom-if" if="[[item.regexp]]">
+                  <div class="regexp">regexp</div>
+                </template>
+              </div>
+              <div class="layout horizontal center">
+                <div class="display-name flex">[[item.displayName]]</div>
+                <div class="category">
+                  <iron-icon icon="[[_computeCategoryIcon(item.category)]]"></iron-icon>
+                </div>
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <h2>Active Rules</h2>
+        <iron-list scroll-target="document" items="[[listRulesResp.rules]]">
+          <template>
+            <div>
+              <div class="rule-entry layout vertical" on-tap="_editExisting" rule="[[item]]">
+                <div class="layout horizontal center">
+                  <div class="pattern flex">[[item.pattern]]</div>
+                  <template is="dom-if" if="[[item.regexp]]">
+                    <div class="regexp">regexp</div>
+                  </template>
+                </div>
+                <div class="layout horizontal center">
+                  <div class="display-name flex">[[item.displayName]]</div>
+                  <div class="category">
+                    <iron-icon icon="[[_computeCategoryIcon(item.category)]]"></iron-icon>
+                  </div>
+                </div>
+              </div>
+            </div>
           </template>
-        </paper-listbox>
-      </paper-dropdown-menu>
-      <div class="layout horizontal end-justified">
-        <paper-button dialog-dismiss>Cancel</paper-button>
-        <paper-button dialog-confirm autofocus on-tap="_onCreateRule">Accept</paper-button>
+        </iron-list>
       </div>
-    </paper-dialog>
 
-    <label>Proposed Rules</label>
-    <iron-list scroll-target="document" items="[[listRuleProposalsResp.rules]]" as="rule" grid>
-      <template>
-        <div>
-          <pluot-rule rule="[[rule]]" on-tap="_onProposalTap"></pluot-rule>
-        </div>
-      </template>
-    </iron-list>
-
-    <label>Rules</label>
-    <iron-list scroll-target="document" class="flex" items="[[listRulesResp.rules]]" as="rule" grid
-        selection-enabled="true" selected-item="{{selectedRule}}">
-      <template>
-        <div>
-          <pluot-rule rule="[[rule]]" selected="[[selected]]"></pluot-rule>
-        </div>
-      </template>
-    </iron-list>
+      <div class="adding-page" adding="true">
+        <paper-input label="Pattern" value="{{newRulePattern}}"></paper-input>
+        <paper-checkbox checked="{{newRuleRegexp}}">Regexp</paper-checkbox>
+        <paper-input label="Name" value="{{newRuleDisplayName}}"></paper-input>
+        <pluot-category code="{{newRuleCategory}}"></pluot-category>
+      </div>
+    </iron-pages>
 
     <iron-ajax
         auto
@@ -90,12 +136,12 @@
         url="[[$.globals.urlPrefix]]rules"
         method="POST"
         content-type="application/json"
-        body="[[_computeCreateRuleReq(newRulePattern, newRuleRegexp, newRuleCategoryStr, newRuleDisplayName)]]"
+        body="[[_computeCreateRuleReq(newRulePattern, newRuleRegexp, newRuleCategory, newRuleDisplayName)]]"
         handle-as="json"
         on-response="_addRule"></iron-ajax>
     <iron-ajax
         id="deleteRuleAjax"
-        url="[[$.globals.urlPrefix]]rules/[[selectedRule.id]]"
+        url="[[$.globals.urlPrefix]]rules/[[newRuleId]]"
         method="DELETE"
         on-response="_removeRule"></iron-ajax>
   </template>
@@ -106,57 +152,71 @@
       static get properties() {
         return {
           adding: { type: Boolean, notify: true, value: false },
-          canDelete: { type: Boolean, notify: true, computed: '_computeCanDelete(selectedRule)' },
+          canDelete: {
+            type: Boolean,
+            notify: true,
+            computed: '_computeCanDelete(adding, newRuleId)'
+          },
+          canConfirm: {
+            type: Boolean, notify: true, computed: '_computeCanConfirm(adding, newRuleId)'
+          },
+          newRuleId: { type: Number, notify: true, value: null },
           newRulePattern: { type: String, value: "" },
-          newRuleCategoryStr: { type: String, value: "" },
+          newRuleCategory: { type: Number, value: 1 },
           newRuleRegexp: { type: Boolean, value: false },
           newRuleDisplayName: { type: String, value: "" },
         };
       }
-      create() {
+      editNew() {
+        this.newRuleId = null;
         this.newRulePattern = "";
-        this.newRuleCategoryStr = "";
+        this.newRuleCategory = 1;
         this.newRuleRegexp = false;
         this.newRuleDisplayName = "";
-        this.$.editDialog.open();
+        this.adding = true;
       }
       delete() {
-        this.$.deleteRuleAjax.generateRequest();
-      }
-      _addRule(evt) {
-        this.push('listRulesResp.rules', evt.target.lastResponse);
-      }
-      _removeRule(evt) {
-        var parts = evt.target.lastRequest.url.split('/');
-        var deletedId = parts[parts.length-1];
-        // Find index of deleted rule.
-        var deleted = -1;
-        for (var i = 0; i < this.listRulesResp.rules.length; i++) {
-          if (this.listRulesResp.rules[i].id == deletedId) {
-            deleted = i;
-            break;
-          }
-        }
-        if (deleted != -1) {
-          this.splice('listRulesResp.rules', deleted, 1);
+        if (this.adding && this.newRuleId) {
+          this.$.deleteRuleAjax.generateRequest();
+          this.adding = false;
         }
       }
-      _computeCreateRuleReq(newRulePattern, newRuleRegexp, newRuleCategoryStr, newRuleDisplayName) {
+      confirmEdit() {
+        if (this.adding) {
+          this.$.createRuleAjax.generateRequest();
+          this.adding = false;
+        }
+      }
+      _computeCanConfirm(adding, newRuleId) { return adding && !newRuleId; }
+      _computeCanDelete(adding, newRuleId) { return adding && newRuleId; }
+      _computeCategoryIcon(code) { return this.$.globals.categoryIcon(code); }
+      _computeCreateRuleReq(newRulePattern, newRuleRegexp, newRuleCategory, newRuleDisplayName) {
         return {
           pattern: newRulePattern,
           regexp: newRuleRegexp,
           displayName: newRuleDisplayName,
-          category: parseInt(newRuleCategoryStr)
+          category: newRuleCategory,
         };
       }
-      _computeCanDelete(selectedRule) { return selectedRule != null; }
-      _formatCategory(category) { return this.$.globals.categoryName(category); }
-      _onCreateRule() { this.$.createRuleAjax.generateRequest(); }
-      _onProposalTap(evt) {
+      _computePageToShow(adding) { return adding ? "true" : "false"; }
+      _addRule(evt) {
+        this.unshift('listRulesResp.rules', evt.target.lastResponse);
+      }
+      _editExisting(evt) {
+        this.newRuleId = evt.currentTarget.rule.id;
         this.newRulePattern = evt.currentTarget.rule.pattern;
-        this.newRuleCategoryStr = String(evt.currentTarget.rule.category);
+        this.newRuleRegexp = evt.currentTarget.rule.regexp;
+        this.newRuleCategory = evt.currentTarget.rule.category;
         this.newRuleDisplayName = evt.currentTarget.rule.displayName;
-        this.$.editDialog.open();
+        this.adding = true;
+      }
+      _removeRule(evt) {
+        var parts = evt.target.lastRequest.url.split('/');
+        var deletedId = parseInt(parts[parts.length-1]);
+        var i = this.listRulesResp.rules.map(r => r.id).indexOf(deletedId);
+        if (i != -1) {
+          this.splice('listRulesResp.rules', i, 1);
+        }
       }
     }
 
