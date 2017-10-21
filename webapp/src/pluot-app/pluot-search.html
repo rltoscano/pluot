@@ -53,9 +53,9 @@
             query.categories.push(
               this.$.globals.categoryCode(token.substr('cat:'.length)));
           } else if (token.startsWith('after:')) {
-            query.after = token.substr('after:'.length);
+            query.after = this._parseDate(token.substr('after:'.length));
           } else if (token.startsWith('before:')) {
-            query.before = token.substr('before:'.length);
+            query.before = this._parseDate(token.substr('before:'.length));
           } else if (token.startsWith('expense:')) {
             var exp = token.substr('expense:'.length);
             if (exp == 'true') {
@@ -96,6 +96,13 @@
           i = j;
         }
         return quoteJoinedTokens;
+      }
+      _parseDate(str) {
+        if (!/^\d\d\d\d-\d\d?-\d\d?$/.test(str)) {
+          return null;
+        }
+        var parts = str.split('-');
+        return new Date(parseInt(parts[0]), parseInt(parts[1])-1, parseInt(parts[2]));
       }
     }
     window.customElements.define(PluotSearch.is, PluotSearch);

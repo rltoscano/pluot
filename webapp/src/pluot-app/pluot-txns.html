@@ -177,10 +177,11 @@
             return false;
           }
         }
-        if (query.after != null && query.after >= txn.postDate.substr(0, 10)) {
+        var postDate = new Date(txn.postDate);
+        if (query.after != null && query.after.getTime() > postDate.getTime()) {
           return false;
         }
-        if (query.before != null && query.before <= txn.postDate.substr(0, 10)) {
+        if (query.before != null && query.before.getTime() <= postDate.getTime()) {
           return false;
         }
         if (query.isExpense != null &&
