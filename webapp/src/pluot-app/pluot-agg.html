@@ -43,7 +43,8 @@
         type="column"
         rows="[[_computeMonthly(_aggResp)]]"
         cols='[{"label": "Month", "type": "string"}, {"label": "Spending", "type": "number"}, {"label": "Income", "type": "number"}]'
-        on-google-chart-select='_navigateToTxnsPageFromColumnChart'></google-chart>
+        on-google-chart-select='_navigateToTxnsPageFromColumnChart'
+        options='{"colors": ["rgb(220, 57, 18)", "rgb(51, 102, 204)"]}'></google-chart>
     <iron-ajax
         auto
         method="POST"
