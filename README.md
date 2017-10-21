@@ -1,3 +1,8 @@
+# Prerequisites
+
+1. [Polymer 2.x](https://www.polymer-project.org/2.0/start/install-2-0)
+2. [Google App Engine Standard SDK for Golang](https://cloud.google.com/appengine/docs/standard/go/download)
+
 # Installation
 
 1. Pull down all the polymer dependencies with `polymer install` run from the
@@ -5,13 +10,16 @@
 
 # Deployment
 
+To deploy to App Engine, you'll need to [create a Google Cloud
+project](https://cloud.google.com/resource-manager/docs/creating-managing-projects).
+
 1. Run `go run tool/package_webapp.go` to build the web app and copy it to the
    service folder.
 1. Run `dev_appserver.py service/src/github.com/rltoscano/pluot/app.yaml` to run
    a development server. The server will be started at http://localhost:8080
 1. To deploy to prod run
    `gcloud app deploy service/src/github.com/rltoscano/pluot/app.yaml --project=$MYPROJECT`
-   where $MYPROJECT is set to whatever Appengine app you've created.
+   where $MYPROJECT is set to whatever App Engine app you've created.
 
 # Data Model
 
@@ -31,17 +39,9 @@ Properties
 - `Note` - `string`
 - `Category` - `int`, system-generated category.
 - `UserCategory` - `int`, user override category.
-- `Split` - `TxnSplit[]`
+- `Splits` - `int[]`, IDs of transactions split from this one.
 - `LastUpdated` - `Timestamp`
-
-## TxnSplit
-A split of one transaction for the purpose of categorization.
-
-Properties
-- `Amount` - `int64`
-- `DisplayName` - `string`
-- `Category` - `int`
-- `Note` - `string`
+- `SplitSourceID` - `int`, ID of the source transaction that this transaction was split from.
 
 ## UploadEvent
 
@@ -62,35 +62,6 @@ Properties
 1. De-dupe any transactions.
 1. Visit /txns to see all transactions.
 
-
-# API
-
-## Upload
-
-Parameters
-- `Csv` - `string`, text of the CSV file.
-- `Source` - `string`, source of the uploaded transactions. E.g. bank.
-- `Start` - `Timestamp`, starting bound of the upload which may before the earliest transaction in the upload
-- `End` - `Timestamp`, ending bound of the upload which may after the most recent transaction in the upload
-
-## ComputeAggregation
-Calculates aggregations for a time-bound filtered list of transactions.
-
-Parameters
-- `start` - `Timestamp`
-- `end` - `Timestamp`
-- `category` - `int`
-
-Results
-- `Avg` - `int`
-- `Total` - `int`
-
 # UI
 
 - Color scheme: https://www.computerhope.com/cgi-bin/htmlcolor.pl?c=583759
-
-# TODO
-
-- [ ] Prevent CSRF attacks.
-- [ ] Create globals for host in webapp urls.
-- [ ] Create globals for category lists.
