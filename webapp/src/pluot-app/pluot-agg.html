@@ -111,7 +111,8 @@
           if (selection.length > 0) {
             var categoryName = this.$.globals.categoryName(selection[0].row + 1);
             window.location.hash =
-                `/txns/cat:"${categoryName}" ` + _timeWindowToQueryString(this._start, this._end);
+                `/txns/cat:"${categoryName}" `
+                    + this._timeWindowToQueryString(new Date(this._start), new Date(this._end));
             this.$.donut.selection = [];
           }
         }.bind(this), 0);
@@ -124,7 +125,7 @@
             var end = new Date(start.getFullYear(), start.getMonth() + 1);
             var isExpense = (selection[0].column == 1);
             window.location.hash =
-                '/txns/' + this._timeWindowToQueryString(start, end) + ' expense:' + isExpense;
+                `/txns/expense:${isExpense} ` + this._timeWindowToQueryString(start, end);
             this.$.column.selection = [];
           }
         }.bind(this), 0);
