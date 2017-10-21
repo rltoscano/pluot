@@ -19,6 +19,10 @@ const (
 	TimeWindowLast6Months = 2
 )
 
+const (
+	JSON_TIME_FORMAT = "Mon Jan 2 15:04:05 -0700 MST 2006"
+)
+
 // ComputeAggregationRequest is a JSON request for the ComputeAggregation
 // method.
 type ComputeAggregationRequest struct {
@@ -36,6 +40,7 @@ type ComputeAggregationResponse struct {
 // MonthAgg contains the aggregation of expenses and income over one month.
 type MonthAgg struct {
 	Month   string `json:"month"`
+	Date    string `json:"date"`
 	Expense int64  `json:"expense"`
 	Income  int64  `json:"income"`
 }
@@ -84,7 +89,7 @@ func computeAggregation(c context.Context, r *http.Request, u *user.User) (inter
 		Months: []MonthAgg{},
 	}
 	currMonth := start
-	monthAgg := MonthAgg{Month: monthStr(currMonth)}
+	monthAgg := MonthAgg{Month: monthStr(currMonth), Date: currMonth.Format(JSON_TIME_FORMAT)}
 	for _, t := range txns {
 		if len(t.Splits) > 0 {
 			// Don't count split transactions.
@@ -100,7 +105,7 @@ func computeAggregation(c context.Context, r *http.Request, u *user.User) (inter
 		for !currMonth.AddDate(0, 1, 0).After(t.PostDate) {
 			resp.Months = append(resp.Months, monthAgg)
 			currMonth = currMonth.AddDate(0, 1, 0)
-			monthAgg = MonthAgg{Month: monthStr(currMonth)}
+			monthAgg = MonthAgg{Month: monthStr(currMonth), Date: currMonth.Format(JSON_TIME_FORMAT)}
 		}
 		if IsExpenseCategory(cat) {
 			monthAgg.Expense = monthAgg.Expense - t.Amount

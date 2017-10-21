@@ -30,6 +30,7 @@
         { displayName: 'Rentals', icon: 'places:business-center' },
         { displayName: 'Other Income', icon: 'trending-up' },
       ];
+      var incomeCategories = [14, 15, 16, 17];
       var categoryObjs = [];
       for (var i = 1; i < categories.length; i++) {
         categoryObjs.push({ code: i, displayName: categories[i].displayName, icon: categories[i].icon });
@@ -56,6 +57,9 @@
         }
         categoryIcon(code) {
           return this.categories[code-1].icon;
+        }
+        isIncome(code) {
+          return incomeCategories.includes(code);
         }
       }
       window.customElements.define(PluotGlobals.is, PluotGlobals);

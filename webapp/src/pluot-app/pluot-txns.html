@@ -173,8 +173,7 @@
           return true;
         }
         if (query.categories.length > 0) {
-          var cat = (txn.userCategory != 0) ? txn.userCategory : txn.category;
-          if (!query.categories.includes(cat)) {
+          if (!query.categories.includes(txn.userCategory || txn.category)) {
             return false;
           }
         }
@@ -182,6 +181,10 @@
           return false;
         }
         if (query.before != null && query.before <= txn.postDate.substr(0, 10)) {
+          return false;
+        }
+        if (query.isExpense != null &&
+            query.isExpense == this.$.globals.isIncome(txn.userCategory || txn.category)) {
           return false;
         }
         return true;

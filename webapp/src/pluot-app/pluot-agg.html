@@ -37,17 +37,18 @@
         options='{"pieHole": 0.3}'
         rows="[[_computeTotals(_aggResp, _categories)]]"
         cols='[{"label": "Category", "type": "string"},{"label": "Total", "type": "number"}]'
-        on-google-chart-select='_navigateToTxnsPage'></google-chart>
+        on-google-chart-select='_navigateToTxnsPageFromDonutChart'></google-chart>
     <google-chart
+        id="column"
         type="column"
         rows="[[_computeMonthly(_aggResp)]]"
-        cols='[{"label": "Month", "type": "string"}, {"label": "Spending", "type": "number"}, {"label": "Income", "type": "number"}]'></google-chart>
+        cols='[{"label": "Month", "type": "string"}, {"label": "Spending", "type": "number"}, {"label": "Income", "type": "number"}]'
+        on-google-chart-select='_navigateToTxnsPageFromColumnChart'></google-chart>
     <iron-ajax
         auto
         method="POST"
         content-type="application/json"
         handle-as="json"
-        debounce-duration="1000"
         url="[[$.globals.urlPrefix]]aggs"
         body="[[_computeAggReq(_start, _end)]]"
         last-response="{{_aggResp}}"></iron-ajax>
@@ -62,7 +63,7 @@
           _categories: { type: Array, value: [] },
           _end: { type: String, computed: '_computeEnd(_timeWindow)' },
           _start: { type: String, computed: '_computeStart(_timeWindow)' },
-          _timeWindow: { type: String, value: "last30Days" },
+          _timeWindow: { type: String, value: 'last30Days' },
         };
       }
       _computeAggReq(_start, _end) {
@@ -87,35 +88,53 @@
         return start.toUTCString();
       }
       _computeTotals(_aggResp, _categories) {
-        var totals = _categories.
+        return _categories.
             filter(c => !PluotAgg.ignoredCategories.includes(c.code)).
             map(c => [ c.displayName, Math.abs(_aggResp.totals[c.code]) / 100.0 ]);
-        return totals;
       }
       _computeMonthly(_aggResp) {
-        return _aggResp.months.map(m => [m.month, m.expense / 100.0, m.income / 100.0]);
+        var months =
+            ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return _aggResp.months.map(
+            m => [
+              months[new Date(m.date).getMonth()] + " " + new Date(m.date).getFullYear(),
+              m.expense / 100.0,
+              m.income / 100.0
+            ]);
       }
-      _navigateToTxnsPage(evt) {
+      _navigateToTxnsPageFromDonutChart(evt) {
         // A delayed function is used due to a bug where donut's selection property is not updated
         // before the event fires.
         setTimeout(function() {
           var selection = this.$.donut.selection;
           if (selection.length > 0) {
-            var start = new Date(this._start);
-            var end = new Date(this._end);
             var categoryName = this.$.globals.categoryName(selection[0].row + 1);
-            var queryStr =
-                `cat:"${categoryName}" `
-                + `after:${String(start.getFullYear()).padStart(4, '0')}`
-                + `-${String(start.getMonth() + 1).padStart(2, '0')}`
-                + `-${String(start.getDate()).padStart(2, '0')} `
-                + `before:${String(end.getFullYear()).padStart(4, '0')}`
-                + `-${String(end.getMonth() + 1).padStart(2, '0')}`
-                + `-${String(end.getDate()).padStart(2, '0')}`;
-            window.location.hash = '/txns/' + queryStr;
+            window.location.hash =
+                `/txns/cat:"${categoryName}" ` + _timeWindowToQueryString(this._start, this._end);
             this.$.donut.selection = [];
           }
         }.bind(this), 0);
+      }
+      _navigateToTxnsPageFromColumnChart(evt) {
+        setTimeout(function() {
+          var selection = this.$.column.selection;
+          if (selection.length > 0) {
+            var start = new Date(this.$.column.rows[selection[0].row][0]);
+            var end = new Date(start.getFullYear(), start.getMonth() + 1);
+            var isExpense = (selection[0].column == 1);
+            window.location.hash =
+                '/txns/' + this._timeWindowToQueryString(start, end) + ' expense:' + isExpense;
+            this.$.column.selection = [];
+          }
+        }.bind(this), 0);
+      }
+      _timeWindowToQueryString(start, end) {
+        return `after:${String(start.getFullYear()).padStart(4, '0')}`
+            + `-${String(start.getMonth() + 1).padStart(2, '0')}`
+            + `-${String(start.getDate()).padStart(2, '0')} `
+            + `before:${String(end.getFullYear()).padStart(4, '0')}`
+            + `-${String(end.getMonth() + 1).padStart(2, '0')}`
+            + `-${String(end.getDate()).padStart(2, '0')}`;
       }
     }
     window.customElements.define(PluotAgg.is, PluotAgg);

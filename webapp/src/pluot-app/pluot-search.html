@@ -45,7 +45,8 @@
           displayName: "",
           categories: [],
           before: null,
-          after: null
+          after: null,
+          isExpense: null,
         };
         tokens.forEach(token => {
           if (token.startsWith('cat:')) {
@@ -55,6 +56,13 @@
             query.after = token.substr('after:'.length);
           } else if (token.startsWith('before:')) {
             query.before = token.substr('before:'.length);
+          } else if (token.startsWith('expense:')) {
+            var exp = token.substr('expense:'.length);
+            if (exp == 'true') {
+              query.isExpense = true;
+            } else if (exp == 'false') {
+              query.isExpense = false;
+            }
           }
           // TODO(robert): Support searching by display name.
         });
