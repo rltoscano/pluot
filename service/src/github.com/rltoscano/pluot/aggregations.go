@@ -19,11 +19,6 @@ const (
 	TimeWindowLast6Months = 2
 )
 
-const (
-	// JSONTimeFormat is the string format of JSON UTC time.
-	JSONTimeFormat = "Mon Jan 2 15:04:05 -0700 MST 2006"
-)
-
 // ComputeAggregationRequest is a JSON request for the ComputeAggregation
 // method.
 type ComputeAggregationRequest struct {

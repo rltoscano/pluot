@@ -1,6 +1,9 @@
 package pluot
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 // Transaction categories. Don't renumber these.
 const (
@@ -57,6 +60,11 @@ const (
 	SourceWellsfargo = "wellsfargo"
 )
 
+const (
+	// JSONTimeFormat is the string format of JSON UTC time.
+	JSONTimeFormat = "Mon, 2 Jan 2006 15:04:05 MST"
+)
+
 // Txn represents a financial transaction.
 type Txn struct {
 	ID                  int64     `datastore:"-" json:"id"`
@@ -71,6 +79,30 @@ type Txn struct {
 	UploadID            int64     `json:"uploadId"`
 	Splits              []int64   `json:"splits"`
 	SplitSourceID       int64     `json:"splitSourceId"`
+}
+
+// MarshalJSON marshals a Txn to JSON while converting `PostDate` to a string in JSONTimeFormat.
+func (t *Txn) MarshalJSON() ([]byte, error) {
+	type Alias Txn
+	return json.Marshal(&struct {
+		*Alias
+		PostDate string `json:"postDate"`
+	}{Alias: (*Alias)(t), PostDate: t.PostDate.Format(JSONTimeFormat)})
+}
+
+// UnmarshalJSON unmarshals a Txn from JSON while parsing `postDate` to a time.Time.
+func (t *Txn) UnmarshalJSON(b []byte) error {
+	type Alias Txn
+	alias := struct {
+		*Alias
+		PostDate string `json:"postDate"`
+	}{Alias: (*Alias)(t)}
+	var err error
+	if err = json.Unmarshal(b, &alias); err != nil {
+		return err
+	}
+	t.PostDate, err = time.Parse(JSONTimeFormat, alias.PostDate)
+	return err
 }
 
 // IsExpenseCategory returns whether the given category is an expense.
