@@ -52,6 +52,11 @@ type SplitTxnResponse struct {
 	Txns []Txn `json:"txns"`
 }
 
+// CreateTxnRequest represents a request to create a manually entered transaction (cash).
+type CreateTxnRequest struct {
+	Txn Txn `json:"txn"`
+}
+
 // listTxns lists the transactions in the database.
 func listTxns(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
 	txns, err := loadTxns(c, time.Time{}, time.Time{}, CategoryUnknown, false)
@@ -225,6 +230,38 @@ func splitTxn(c context.Context, r *http.Request, u *user.User) (interface{}, er
 		return nil, err
 	}
 	return SplitTxnResponse{Txns: splits}, nil
+}
+
+func createTxn(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
+	req := CreateTxnRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: err.Error()}
+	}
+	if req.Txn.Amount == 0 {
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: "`amount` must be non-zero"}
+	}
+	if req.Txn.PostDate.IsZero() {
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: "`postDate` must be provided"}
+	}
+	if req.Txn.UserDisplayName == "" {
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: "`userDisplayName` must be provided"}
+	}
+	if req.Txn.UserCategory == 0 {
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: "`userCategory` must be provided"}
+	}
+	filteredTxn := Txn{
+		Amount:          req.Txn.Amount,
+		PostDate:        req.Txn.PostDate,
+		UserDisplayName: req.Txn.UserDisplayName,
+		UserCategory:    req.Txn.UserCategory,
+		Note:            req.Txn.Note,
+	}
+	k, err := datastore.Put(c, datastore.NewIncompleteKey(c, "Txn", nil), &filteredTxn)
+	if err != nil {
+		return nil, err
+	}
+	filteredTxn.ID = k.IntID()
+	return filteredTxn, nil
 }
 
 func applyFields(source, dest *Txn, fields []string) error {
