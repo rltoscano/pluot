@@ -56,19 +56,19 @@ func checkUpload(c context.Context, r *http.Request, u *user.User) (interface{},
 	// Parse and validate input.
 	req := UploadRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, pihen.Error{http.StatusBadRequest, err.Error()}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: err.Error()}
 	}
 	if req.Source == "" {
-		return nil, pihen.Error{http.StatusBadRequest, "missing `source` parameter"}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: "missing `source` parameter"}
 	}
 	if req.CSV == "" {
-		return nil, pihen.Error{http.StatusBadRequest, "missing `csv` parameter"}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: "missing `csv` parameter"}
 	}
 	if req.Start == "" {
-		return nil, pihen.Error{http.StatusBadRequest, "missing `start` parameter"}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: "missing `start` parameter"}
 	}
 	if req.End == "" {
-		return nil, pihen.Error{http.StatusBadRequest, "missing `end` parameter"}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: "missing `end` parameter"}
 	}
 	uploadedTxns, err := parseTxns(req.CSV, req.Source)
 	if err != nil {
@@ -113,19 +113,19 @@ func checkUpload(c context.Context, r *http.Request, u *user.User) (interface{},
 func createUpload(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
 	req := UploadRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, pihen.Error{http.StatusBadRequest, err.Error()}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: err.Error()}
 	}
 	if req.Source == "" {
-		return nil, pihen.Error{http.StatusBadRequest, "missing `source` parameter"}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: "missing `source` parameter"}
 	}
 	if req.CSV == "" {
-		return nil, pihen.Error{http.StatusBadRequest, "missing `csv` parameter"}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: "missing `csv` parameter"}
 	}
 	if req.Start == "" {
-		return nil, pihen.Error{http.StatusBadRequest, "missing `start` parameter"}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: "missing `start` parameter"}
 	}
 	if req.End == "" {
-		return nil, pihen.Error{http.StatusBadRequest, "missing `end` parameter"}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: "missing `end` parameter"}
 	}
 	uploadedTxns, err := parseTxns(req.CSV, req.Source)
 	if err != nil {

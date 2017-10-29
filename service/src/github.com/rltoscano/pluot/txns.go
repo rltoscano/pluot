@@ -67,7 +67,7 @@ func patchTxn(c context.Context, r *http.Request, u *user.User) (interface{}, er
 	}
 	req := PatchTxnRequest{}
 	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, pihen.Error{http.StatusBadRequest, err.Error()}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: err.Error()}
 	}
 	t := new(Txn)
 	t.ID = id
@@ -90,10 +90,10 @@ func patchTxns(c context.Context, r *http.Request, u *user.User) (interface{}, e
 	// Parse ID out of URL.
 	req := PatchTxnsRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, pihen.Error{http.StatusBadRequest, err.Error()}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: err.Error()}
 	}
 	if len(req.IDs) == 0 || len(req.Fields) == 0 {
-		return nil, pihen.Error{http.StatusBadRequest, "no input specified"}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: "no input specified"}
 	}
 	txns := make([]Txn, len(req.IDs))
 	keys := make([]*datastore.Key, len(req.IDs))
@@ -122,10 +122,10 @@ func patchTxns(c context.Context, r *http.Request, u *user.User) (interface{}, e
 func splitTxn(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
 	req := SplitTxnRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		return nil, pihen.Error{http.StatusBadRequest, err.Error()}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: err.Error()}
 	}
 	if req.SourceID == 0 || len(req.Splits) == 0 {
-		return nil, pihen.Error{http.StatusBadRequest, "no input specified"}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: "no input specified"}
 	}
 	splits := make([]Txn, 0, len(req.Splits))
 	err := datastore.RunInTransaction(c, func(tc context.Context) error {
@@ -143,8 +143,8 @@ func splitTxn(c context.Context, r *http.Request, u *user.User) (interface{}, er
 		}
 		if sum != source.Amount {
 			return pihen.Error{
-				http.StatusBadRequest,
-				fmt.Sprintf("expected splits to add up to %v, but was %v", source.Amount, sum),
+				Status:  http.StatusBadRequest,
+				Message: fmt.Sprintf("expected splits to add up to %v, but was %v", source.Amount, sum),
 			}
 		}
 		// Load existing splits (if any).
@@ -244,8 +244,8 @@ func applyFields(source, dest *Txn, fields []string) error {
 			break
 		default:
 			return pihen.Error{
-				http.StatusBadRequest,
-				fmt.Sprintf("`%s` is not an editable field: `userCategory`, `postDate`, `userDisplayName`, `note` ", f),
+				Status:  http.StatusBadRequest,
+				Message: fmt.Sprintf("`%s` is not an editable field: `userCategory`, `postDate`, `userDisplayName`, `note`", f),
 			}
 		}
 	}

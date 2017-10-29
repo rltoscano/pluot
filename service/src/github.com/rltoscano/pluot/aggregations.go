@@ -20,7 +20,8 @@ const (
 )
 
 const (
-	JSON_TIME_FORMAT = "Mon Jan 2 15:04:05 -0700 MST 2006"
+	// JSONTimeFormat is the string format of JSON UTC time.
+	JSONTimeFormat = "Mon Jan 2 15:04:05 -0700 MST 2006"
 )
 
 // ComputeAggregationRequest is a JSON request for the ComputeAggregation
@@ -89,7 +90,7 @@ func computeAggregation(c context.Context, r *http.Request, u *user.User) (inter
 		Months: []MonthAgg{},
 	}
 	currMonth := start
-	monthAgg := MonthAgg{Month: monthStr(currMonth), Date: currMonth.Format(JSON_TIME_FORMAT)}
+	monthAgg := MonthAgg{Month: monthStr(currMonth), Date: currMonth.Format(JSONTimeFormat)}
 	for _, t := range txns {
 		if len(t.Splits) > 0 {
 			// Don't count split transactions.
@@ -105,7 +106,7 @@ func computeAggregation(c context.Context, r *http.Request, u *user.User) (inter
 		for !currMonth.AddDate(0, 1, 0).After(t.PostDate) {
 			resp.Months = append(resp.Months, monthAgg)
 			currMonth = currMonth.AddDate(0, 1, 0)
-			monthAgg = MonthAgg{Month: monthStr(currMonth), Date: currMonth.Format(JSON_TIME_FORMAT)}
+			monthAgg = MonthAgg{Month: monthStr(currMonth), Date: currMonth.Format(JSONTimeFormat)}
 		}
 		if IsExpenseCategory(cat) {
 			monthAgg.Expense = monthAgg.Expense - t.Amount

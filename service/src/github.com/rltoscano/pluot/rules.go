@@ -53,13 +53,13 @@ type ListRulesResponse struct {
 func createRule(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
 	var rule Rule
 	if err := json.NewDecoder(r.Body).Decode(&rule); err != nil {
-		return nil, pihen.Error{http.StatusBadRequest, err.Error()}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: err.Error()}
 	}
 	if rule.Pattern == "" {
-		return nil, pihen.Error{http.StatusBadRequest, "missing `pattern` parameter"}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: "missing `pattern` parameter"}
 	}
 	if rule.Category == 0 {
-		return nil, pihen.Error{http.StatusBadRequest, "invalid `category`"}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: "invalid `category`"}
 	}
 	rule.Created = time.Now()
 	k, err := datastore.Put(c, datastore.NewIncompleteKey(c, "Rule", nil), &rule)
@@ -74,7 +74,7 @@ func deleteRule(c context.Context, r *http.Request, u *user.User) (interface{}, 
 	parts := strings.Split(r.URL.Path, "/")
 	id, err := strconv.ParseInt(parts[len(parts)-1], 10, 64)
 	if err != nil {
-		return nil, pihen.Error{http.StatusBadRequest, err.Error()}
+		return nil, pihen.Error{Status: http.StatusBadRequest, Message: err.Error()}
 	}
 	return struct{}{}, datastore.Delete(c, datastore.NewKey(c, "Rule", "", id, nil))
 }

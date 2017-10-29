@@ -70,7 +70,7 @@ type config struct {
 
 func authorizeUser(c context.Context, r *http.Request, u *user.User) error {
 	if u == nil {
-		return pihen.Error{http.StatusUnauthorized, "A user could not be determined from the request."}
+		return pihen.Error{Status: http.StatusUnauthorized, Message: "A user could not be determined from the request."}
 	}
 	var conf config
 	k := datastore.NewKey(c, "Config", "singleton", 0, nil)
@@ -88,5 +88,5 @@ func authorizeUser(c context.Context, r *http.Request, u *user.User) error {
 			return nil
 		}
 	}
-	return pihen.Error{http.StatusUnauthorized, fmt.Sprintf("The user %s is unauthorized.", u.Email)}
+	return pihen.Error{Status: http.StatusUnauthorized, Message: fmt.Sprintf("The user %s is unauthorized.", u.Email)}
 }
