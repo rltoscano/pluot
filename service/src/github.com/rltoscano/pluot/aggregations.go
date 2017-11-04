@@ -2,7 +2,6 @@ package pluot
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -22,9 +21,40 @@ const (
 // ComputeAggregationRequest is a JSON request for the ComputeAggregation
 // method.
 type ComputeAggregationRequest struct {
-	TimeWindow int    `json:"timeWindow"`
-	Start      string `json:"start"`
-	End        string `json:"end"`
+	Start time.Time `json:"-"`
+	End   time.Time `json:"-"`
+}
+
+// MarshalJSON marshals a ComputeAggregationRequest to JSON while converting `Start` and `End` to a
+// string in JSONTimeFormat.
+func (r *ComputeAggregationRequest) MarshalJSON() ([]byte, error) {
+	type Alias ComputeAggregationRequest
+	return json.Marshal(&struct {
+		*Alias
+		Start string `json:"start"`
+		End   string `json:"end"`
+	}{Alias: (*Alias)(r), Start: r.Start.Format(JSONTimeFormat), End: r.End.Format(JSONTimeFormat)})
+}
+
+// UnmarshalJSON unmarshals a ComputeAggregationRequest from JSON while parsing `start` and `end` to
+// a time.Time.
+func (r *ComputeAggregationRequest) UnmarshalJSON(b []byte) error {
+	type Alias ComputeAggregationRequest
+	alias := struct {
+		*Alias
+		Start string `json:"start"`
+		End   string `json:"end"`
+	}{Alias: (*Alias)(r)}
+	var err error
+	if err = json.Unmarshal(b, &alias); err != nil {
+		return err
+	}
+	r.Start, err = time.Parse(JSONTimeFormat, alias.Start)
+	if err != nil {
+		return err
+	}
+	r.End, err = time.Parse(JSONTimeFormat, alias.End)
+	return err
 }
 
 // ComputeAggregationResponse contains the total and average aggregations.
@@ -35,10 +65,33 @@ type ComputeAggregationResponse struct {
 
 // MonthAgg contains the aggregation of expenses and income over one month.
 type MonthAgg struct {
-	Month   string `json:"month"`
-	Date    string `json:"date"`
-	Expense int64  `json:"expense"`
-	Income  int64  `json:"income"`
+	Date    time.Time `json:"-"`
+	Expense int64     `json:"expense"`
+	Income  int64     `json:"income"`
+}
+
+// MarshalJSON marshals a MonthAgg to JSON while converting `Date` to a string in JSONTimeFormat.
+func (a *MonthAgg) MarshalJSON() ([]byte, error) {
+	type Alias MonthAgg
+	return json.Marshal(&struct {
+		*Alias
+		Date string `json:"date"`
+	}{Alias: (*Alias)(a), Date: a.Date.Format(JSONTimeFormat)})
+}
+
+// UnmarshalJSON unmarshals a MonthAgg from JSON while parsing `date` to a time.Time.
+func (a *MonthAgg) UnmarshalJSON(b []byte) error {
+	type Alias MonthAgg
+	alias := struct {
+		*Alias
+		Date string `json:"date"`
+	}{Alias: (*Alias)(a)}
+	var err error
+	if err = json.Unmarshal(b, &alias); err != nil {
+		return err
+	}
+	a.Date, err = time.Parse(JSONTimeFormat, alias.Date)
+	return err
 }
 
 func computeAggregation(c context.Context, r *http.Request, u *user.User) (interface{}, error) {
@@ -46,37 +99,7 @@ func computeAggregation(c context.Context, r *http.Request, u *user.User) (inter
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, pihen.Error{Status: http.StatusBadRequest, Message: err.Error()}
 	}
-	var start, end time.Time
-	if req.Start != "" && req.End != "" {
-		var err error
-		start, err = time.Parse("Mon, 02 Jan 2006 15:04:05 MST", req.Start)
-		if err != nil {
-			return nil, pihen.Error{Status: http.StatusBadRequest, Message: fmt.Sprintf("Invalid `start` value: %v", err)}
-		}
-		end, err = time.Parse("Mon, 02 Jan 2006 15:04:05 MST", req.End)
-		if err != nil {
-			return nil, pihen.Error{Status: http.StatusBadRequest, Message: fmt.Sprintf("Invalid `end` value: %v", err)}
-		}
-	} else {
-		pst, _ := time.LoadLocation("America/Los_Angeles")
-		switch req.TimeWindow {
-		case TimeWindowLast30Days:
-			end = time.Now()
-			start = end.Add(-time.Hour * 24 * 30)
-			break
-		case TimeWindowLastMonth:
-			now := time.Now()
-			end = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, pst)
-			start = end.AddDate(0, -1, 0)
-			break
-		case TimeWindowLast6Months:
-			now := time.Now()
-			end = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, pst)
-			start = end.AddDate(0, -6, 0)
-			break
-		}
-	}
-	txns, err := loadTxns(c, start, end, CategoryUnknown, true)
+	txns, err := loadTxns(c, req.Start, req.End, CategoryUnknown, true)
 	if err != nil {
 		return nil, err
 	}
@@ -84,8 +107,8 @@ func computeAggregation(c context.Context, r *http.Request, u *user.User) (inter
 		Totals: make([]int64, CategoryEnd),
 		Months: []MonthAgg{},
 	}
-	currMonth := start
-	monthAgg := MonthAgg{Month: monthStr(currMonth), Date: currMonth.Format(JSONTimeFormat)}
+	currMonth := req.Start
+	monthAgg := MonthAgg{Date: currMonth}
 	for _, t := range txns {
 		if len(t.Splits) > 0 {
 			// Don't count split transactions.
@@ -101,7 +124,7 @@ func computeAggregation(c context.Context, r *http.Request, u *user.User) (inter
 		for !currMonth.AddDate(0, 1, 0).After(t.PostDate) {
 			resp.Months = append(resp.Months, monthAgg)
 			currMonth = currMonth.AddDate(0, 1, 0)
-			monthAgg = MonthAgg{Month: monthStr(currMonth), Date: currMonth.Format(JSONTimeFormat)}
+			monthAgg = MonthAgg{Date: currMonth}
 		}
 		if IsExpenseCategory(cat) {
 			monthAgg.Expense = monthAgg.Expense - t.Amount
@@ -114,8 +137,4 @@ func computeAggregation(c context.Context, r *http.Request, u *user.User) (inter
 	resp.Months = append(resp.Months, monthAgg)
 
 	return resp, nil
-}
-
-func monthStr(t time.Time) string {
-	return t.Format("Jan 2006")
 }
