@@ -19,6 +19,7 @@ func init() {
 				Methods: map[string]pihen.Method{
 					http.MethodGet:   listTxns,
 					http.MethodPatch: patchTxns,
+					http.MethodPost:  createTxn,
 				},
 			},
 			{
