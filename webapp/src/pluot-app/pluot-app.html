@@ -73,24 +73,28 @@
                 icon="menu"
                 toggles
                 active="{{drawerOpened}}"
-                hidden$="[[txnsSplitting]]"></paper-icon-button>
+                hidden$="[[_txnsModeNotList(txnsMode)]]"></paper-icon-button>
             <paper-icon-button
                 icon="arrow-back"
-                toggles
-                active="{{!txnsSplitting}}"
-                hidden$="[[!txnsSplitting]]"></paper-icon-button>
-            <div main-title hidden$="[[txnsSearching]]">Pluot</div>
+                on-tap="_setTxnsModeToList"
+                hidden$="[[_txnsModeIsList(txnsMode)]]"></paper-icon-button>
+            <div main-title hidden$="[[_txnsModeNotList(txnsMode)]]">Pluot</div>
+            <div main-title hidden$="[[_txnsModeNotAdd(txnsMode)]]">New Transaction</div>
             <pluot-search
                 id="txnSearch"
                 class="flex"
                 query="{{txnsQuery}}"
                 query-str="{{queryStr}}"
-                hidden$="[[!txnsSearching]]"></pluot-search>
+                hidden$="[[_txnsModeNotListOrNotSearching(txnsMode, txnsSearching)]]"></pluot-search>
+            <paper-icon-button
+                icon="add"
+                on-tap="_setTxnsModeToAdd"
+                hidden$="[[_txnsModeNotList(txnsMode)]]"></paper-icon-button>
             <paper-icon-button
                 icon="search"
                 toggles
                 active="{{txnsSearching}}"
-                hidden$="[[txnsSplitting]]"></paper-icon-button>
+                hidden$="[[_txnsModeNotList(txnsMode)]]"></paper-icon-button>
           </app-toolbar>
           <app-toolbar page="upload">
             <paper-icon-button icon="menu" toggles active="{{drawerOpened}}"></paper-icon-button>
@@ -130,11 +134,7 @@
       </app-header>
 
       <iron-pages selected="[[data.page]]" class="flex layout vertical" attr-for-selected="page">
-        <pluot-txns
-            page="txns"
-            class="flex"
-            splitting="{{txnsSplitting}}"
-            query="[[txnsQuery]]"></pluot-txns>
+        <pluot-txns id="txnsList" page="txns" class="flex" mode="{{txnsMode}}" query="[[txnsQuery]]"></pluot-txns>
         <pluot-upload page="upload" class="flex"></pluot-upload>
         <pluot-rules
             page="rules"
@@ -179,6 +179,14 @@
           this.set('route.path', "/agg");
         }
       }
+      _setTxnsModeToAdd(evt) { this.$.txnsList.mode = 'add'; }
+      _setTxnsModeToList(evt) { this.$.txnsList.mode = 'list'; }
+      _txnsModeNotAdd(txnsMode) { return txnsMode != 'add'; }
+      _txnsModeNotList(txnsMode) { return txnsMode != 'list'; }
+      _txnsModeNotListOrNotSearching(txnsMode, txnsSearching) {
+        return txnsMode != 'list' || !txnsSearching;
+      }
+      _txnsModeIsList(txnsMode) { return txnsMode == 'list'; }
       _updateTxnSearch(subroute) {
         if (subroute.path && subroute.path.substr(1)) {
           this.txnsSearching = true;

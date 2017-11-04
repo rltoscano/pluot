@@ -1,5 +1,7 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
+<link rel="import" href="../pluot-app/pluot-amount.html">
+<link rel="import" href="../pluot-app/pluot-category.html">
 <link rel="import" href="../pluot-app/pluot-edit.html">
 <link rel="import" href="../pluot-app/pluot-format.html">
 <link rel="import" href="../pluot-app/pluot-globals.html">
@@ -19,6 +21,7 @@
 <link rel="import" href="../../bower_components/iron-list/iron-list.html">
 <link rel="import" href="../../bower_components/iron-pages/iron-pages.html">
 <link rel="import" href="../../bower_components/paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../../bower_components/paper-item/paper-item.html">
 <link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 
@@ -33,23 +36,49 @@
         border-bottom-color: #eee;
         border-bottom-style: solid;
       }
+      #add {
+        padding: 16px;
+      }
     </style>
 
     <pluot-globals id="globals"></pluot-globals>
 
-    <iron-pages id="main" selected="[[splitting]]">
+    <iron-pages
+        id="main"
+        selected="[[mode]]"
+        attr-for-selected="id">
 
-      <iron-list id="txnList" class="flex" items="[[_txnModel.filtered]]" scroll-target="document">
+      <iron-list
+          id="list"
+          class="flex"
+          items="[[_txnModel.filtered]]"
+          scroll-target="document">
         <template>
-          <pluot-txn txn="[[item]]" on-edit="_patch" on-split="_showSplit" on-resize="_resizeItem"></pluot-txn>
+          <pluot-txn
+              txn="[[item]]"
+              on-edit="_patch"
+              on-split="_showSplit"
+              on-resize="_resizeItem"></pluot-txn>
         </template>
       </iron-list>
 
       <pluot-split
           id="split"
+          page="split"
           split-txn="[[_splitTxn]]"
           splits="{{_splits}}"
           on-done="_sendSplitRequest"></pluot-split>
+
+      <div id="add">
+        <pluot-amount amount="{{_addAmount}}"></pluot-amount>
+        <pluot-category code="{{_addCategory}}"></pluot-category>
+        <paper-input
+            type="date"
+            label="Date"
+            value="{{_addDate}}"></paper-input>
+        <paper-input value="{{_addDescription}}" label="Description"></paper-input>
+        <paper-button raised on-tap="_createTxn">Done</paper-button>
+      </div>
 
     </iron-pages>
 
@@ -73,6 +102,16 @@
         body="[[_computeSplitReq(_splitTxn, _splits.*)]]"
         handle-as="json"
         on-response="_toastSplitSuccess"></iron-ajax>
+    <iron-ajax
+        id="createAjax"
+        url="[[$.globals.urlPrefix]]txns"
+        method="POST"
+        content-type="application/json"
+        body="[[_computeCreateReq(_addAmount, _addCategory, _addDate, _addDescription)]]"
+        handle-as="json"
+        on-response="_toastAndInsertTransaction"
+        on-error="_toastCreateTxnFailed"></iron-ajax>
+
 
     <paper-toast id="toast" fit-into="[[$.main]]"></paper-toast>
   </template>
@@ -81,8 +120,9 @@
       static get is() { return 'pluot-txns'; }
       static get properties() {
         return {
-          splitting: { type: Boolean, notify: true, value: false },
+          mode: { type: String, notify: true, value: 'list' },
           query: { type: Object, value: null },
+          _addDate: { type: String, value: new Date().toISOString().substring(0, 10) },
           _listResp: { type: Object, value: { txns: [] } },
           _splitTxn: { type: Object, value: { id: 0 } },
           _splits: { type: Array, value: [] },
@@ -107,6 +147,19 @@
         this.$.patchAjax.body = body;
         this.$.patchAjax.generateRequest();
       }
+      _computeCreateReq(_addAmount, _addCategory, _addDate, _addDescription) {
+        if (!_addAmount || !_addCategory || !_addDate || !_addDescription) {
+          return {};
+        }
+        return {
+          txn: {
+            amount: _addAmount,
+            userCategory: _addCategory,
+            postDate: new Date(_addDate).toUTCString(),
+            userDisplayName: _addDescription,
+          }
+        };
+      }
       _computeTxnModel(query, txnsProp) {
         var txns = txnsProp.base;
         var model = { txnById: {}, filtered: [] };
@@ -123,6 +176,10 @@
       }
       _computeSplitReq(_splitTxn, _splitsProp) {
         return { sourceId: _splitTxn.id, splits: _splitsProp.base };
+      }
+      _createTxn(evt) {
+        this.$.createAjax.generateRequest();
+        this.mode = 'list';
       }
       _toastSplitSuccess(evt) {
         this.$.toast.text = 'Transaction split';
@@ -145,7 +202,7 @@
         this.$.toast.open();
       }
       _sendSplitRequest(evt) {
-        this.splitting = false;
+        this.mode = 'list';
         this.$.splitAjax.generateRequest();
       }
       _showSplit(evt) {
@@ -163,7 +220,7 @@
                       category: s.userCategory,
                       amount: s.amount
                     }));
-        this.splitting = true;
+        this.mode = 'split';
       }
       _filter(txn, query) {
         if (txn.splits && txn.splits.length > 0) { // Hide split sources.
@@ -194,6 +251,15 @@
         if (evt.target.txn) {
           this.$.txnList.updateSizeForItem(evt.target.txn);
         }
+      }
+      _toastAndInsertTransaction(evt) {
+        this.$.toast.text = "Transaction created";
+        this.$.toast.open();
+        this.unshift('_listResp.txns', evt.target.lastResponse);
+      }
+      _toastCreateTxnFailed(evt) {
+        this.$.toast.text = 'Transaction creation failed';
+        this.$.toast.open();
       }
     }
     window.customElements.define(PluotTxns.is, PluotTxns);
