@@ -130,7 +130,7 @@
         };
       }
       _patch(evt) {
-        this.$.txnList.notifyResize();
+        this.$.list.notifyResize();
         console.log('Patching..');
         var body = { txn: {id: evt.detail.id}, fields: [] };
         if (evt.detail.field === 'name') {
@@ -249,7 +249,7 @@
       }
       _resizeItem(evt) {
         if (evt.target.txn) {
-          this.$.txnList.updateSizeForItem(evt.target.txn);
+          this.$.list.updateSizeForItem(evt.target.txn);
         }
       }
       _toastAndInsertTransaction(evt) {
