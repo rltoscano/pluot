@@ -51,7 +51,7 @@
         content-type="application/json"
         handle-as="json"
         url="[[$.globals.urlPrefix]]aggs"
-        body="[[_computeAggReq(_start, _end)]]"
+        body='{"start": "[[_start]]", "end": "[[_end]]"}'
         last-response="{{_aggResp}}"></iron-ajax>
   </template>
   <script>
@@ -66,9 +66,6 @@
           _start: { type: String, computed: '_computeStart(_timeWindow)' },
           _timeWindow: { type: String, value: 'last30Days' },
         };
-      }
-      _computeAggReq(_start, _end) {
-        return { start: _start, end: _end };
       }
       _computeEnd(_timeWindow) {
         var end = new Date();

@@ -136,7 +136,12 @@
         url="[[$.globals.urlPrefix]]rules"
         method="POST"
         content-type="application/json"
-        body="[[_computeCreateRuleReq(newRulePattern, newRuleRegexp, newRuleCategory, newRuleDisplayName)]]"
+        body='{
+          "pattern": "[[newRulePattern]]",
+          "regexp": [[newRuleRegexp]],
+          "displayName": "[[newRuleDisplayName]]",
+          "category": [[newRuleCategory]]
+        }'
         handle-as="json"
         on-response="_addRule"></iron-ajax>
     <iron-ajax
@@ -190,14 +195,6 @@
       _computeCanConfirm(adding, newRuleId) { return adding && !newRuleId; }
       _computeCanDelete(adding, newRuleId) { return adding && newRuleId; }
       _computeCategoryIcon(code) { return this.$.globals.categoryIcon(code); }
-      _computeCreateRuleReq(newRulePattern, newRuleRegexp, newRuleCategory, newRuleDisplayName) {
-        return {
-          pattern: newRulePattern,
-          regexp: newRuleRegexp,
-          displayName: newRuleDisplayName,
-          category: newRuleCategory,
-        };
-      }
       _computePageToShow(adding) { return adding ? "true" : "false"; }
       _addRule(evt) {
         this.unshift('listRulesResp.rules', evt.target.lastResponse);
