@@ -68,7 +68,7 @@ const (
 // Txn represents a financial transaction.
 type Txn struct {
 	ID                  int64     `datastore:"-" json:"id"`
-	PostDate            time.Time `json:"postDate"`
+	PostDate            time.Time `json:"-"`
 	Amount              int64     `datastore:"Amount,noindex" json:"amount"`
 	OriginalDisplayName string    `json:"originalDisplayName"`
 	DisplayName         string    `json:"displayName"`
@@ -101,7 +101,9 @@ func (t *Txn) UnmarshalJSON(b []byte) error {
 	if err = json.Unmarshal(b, &alias); err != nil {
 		return err
 	}
-	t.PostDate, err = time.Parse(JSONTimeFormat, alias.PostDate)
+	if len(alias.PostDate) != 0 {
+		t.PostDate, err = time.Parse(JSONTimeFormat, alias.PostDate)
+	}
 	return err
 }
 
