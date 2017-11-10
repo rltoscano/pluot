@@ -151,17 +151,23 @@
 
     </app-header-layout>
 
-    <app-drawer id="drawer" slot="drawer" opened="{{drawerOpened}}" align="start">
-      <paper-listbox
-          selected="{{data.page}}"
-          class="layout vertical"
-          attr-for-selected="page"
-          on-selected-changed="_closeDrawer">
-        <paper-item page="txns">Transactions</paper-item>
-        <paper-item page="upload">Upload</paper-item>
-        <paper-item page="rules">Rules</paper-item>
-        <paper-item page="agg">Aggregations</paper-item>
-      </paper-listbox>
+    <app-drawer id="drawer" slot="drawer" opened="{{drawerOpened}}" align="start" class="layout vertical">
+      <div class="layout vertical" style="height: 100%;">
+        <paper-listbox
+            selected="{{data.page}}"
+            class="layout vertical"
+            attr-for-selected="page"
+            on-selected-changed="_closeDrawer">
+          <paper-item page="txns">Transactions</paper-item>
+          <paper-item page="upload">Upload</paper-item>
+          <paper-item page="rules">Rules</paper-item>
+          <paper-item page="agg">Aggregations</paper-item>
+        </paper-listbox>
+        <div class="flex"></div>
+        <div class="layout horizontal end-justified">
+          <paper-icon-button icon="bug-report" on-tap="navToGitHubIssues"></paper-icon-button>
+        </div>
+      </div>
     </app-drawer>
 
   </template>
@@ -175,6 +181,9 @@
           subroute: { type: Object, observer: '_updateTxnSearch' },
           queryStr: { type: String, observer: '_updateSubrouteToQueryStr' },
         };
+      }
+      navToGitHubIssues() {
+        window.location = "https://github.com/rltoscano/pluot/issues/new";
       }
       ready() {
         super.ready();
@@ -212,6 +221,7 @@
       _rulesEditNew() { this.$.rules.editNew(); }
       _rulesDelete() { this.$.rules.delete(); }
       _rulesConfirmEdit() { this.$.rules.confirmEdit(); }
+
     }
     window.customElements.define(PluotApp.is, PluotApp);
   </script>
