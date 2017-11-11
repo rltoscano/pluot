@@ -1,0 +1,27 @@
+:host {
+  @apply(--layout-flex);
+}
+app-header {
+  background-color: #583759;
+  color: #fff;
+  font-family: sans-serif;
+}
+app-toolbar paper-icon-button {
+  --paper-icon-button-ink-color: white;
+}
+paper-icon-button {
+  --paper-icon-button-ink-color: black;
+}
+app-drawer {
+  --app-drawer-content-container: {
+    background-color: #444;
+    color: #fff;
+  };
+}
+app-drawer paper-listbox {
+  background-color: #444;
+  color: #fff;
+}
+app-drawer paper-item {
+  cursor: pointer;
+}
