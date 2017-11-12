@@ -1,9 +1,16 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
+<link rel="import" href="../pluot-app/pluot-theme.html">
+
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 
 <dom-module id="pluot-amount">
   <template>
+    <style includes="pluot-theme">
+      div {
+        color: var(--primary-text-color);
+      }
+    </style>
     <paper-input label="Amount" type="text" value="{{_model}}" auto-validate pattern="-?\d*\.?\d?\d?">
       <div slot="prefix">$</div>
     </paper-input>
