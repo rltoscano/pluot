@@ -1,6 +1,7 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
 <link rel="import" href="../pluot-app/pluot-globals.html">
+<link rel="import" href="../pluot-app/pluot-theme.html">
 
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-icons/communication-icons.html">
@@ -15,30 +16,33 @@
 
 <dom-module id="pluot-category">
   <template>
-    <style include="iron-flex iron-flex-alignment">
+    <style include="iron-flex iron-flex-alignment pluot-theme">
       :host {
         display: block;
-        font-family: sans-serif;
       }
       .subtitle {
-        font-size: 75%;
-        color: gray;
+        @apply --paper-font-caption;
+        color: var(--secondary-text-color);
+        margin-left: 8px;
       }
       .category-option {
-        width: 74px;
-        height: 74px;
+        width: 128px;
+        height: 36px;
         padding: 18px 8px 0 8px;
         cursor: pointer;
       }
       .category-option.iron-selected {
-        background-color: #583759;
-        color: #fff;
+        background-color: var(--primary-color);
+        color: var(--text-on-primary-color);
       }
       .category-option.iron-selected .subtitle {
-        color: #fff;
+        color: var(--text-on-primary-color);
       }
       paper-listbox {
-        padding: 0;
+        padding: 8px;
+      }
+      paper-icon-button {
+        color: var(--primary-text-color);
       }
     </style>
 
@@ -52,14 +56,14 @@
 
     <template is="dom-if" if="[[selecting]]" restamp>
       <paper-listbox
-          class="layout horizontal center wrap"
+          class="layout horizontal start wrap"
           selected="{{code}}"
           attr-for-selected="code"
           on-iron-activate="_hideSelection">
         <template is="dom-repeat" items="[[$.globals.categories]]">
-          <div code="[[item.code]]" class="layout vertical center category-option">
+          <div code="[[item.code]]" class="layout horizontal start category-option">
             <iron-icon icon="[[item.icon]]"></iron-icon>
-            <div class="subtitle" style="text-align: center;">[[item.displayName]]</div>
+            <div class="subtitle">[[item.displayName]]</div>
           </paper-item-icon>
         </template>
       </paper-listbox>
