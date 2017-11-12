@@ -20,14 +20,12 @@ class PluotApp extends Polymer.Element {
       this.set('route.path', "/agg");
     }
   }
+  _eq(l, r) { return l == r; }
   _setTxnsModeToAdd(evt) { this.$.txnsList.mode = 'add'; }
   _setTxnsModeToList(evt) { this.$.txnsList.mode = 'list'; }
-  _txnsModeNotAdd(txnsMode) { return txnsMode != 'add'; }
-  _txnsModeNotList(txnsMode) { return txnsMode != 'list'; }
   _txnsModeNotListOrNotSearching(txnsMode, txnsSearching) {
     return txnsMode != 'list' || !txnsSearching;
   }
-  _txnsModeIsList(txnsMode) { return txnsMode == 'list'; }
   _updateTxnSearch(subroute) {
     if (subroute.path && subroute.path.substr(1)) {
       this.txnsSearching = true;

@@ -49,13 +49,13 @@
                 icon="menu"
                 toggles
                 active="{{drawerOpened}}"
-                hidden$="[[_txnsModeNotList(txnsMode)]]"></paper-icon-button>
+                hidden$="[[!_eq(txnsMode, 'list')]]"></paper-icon-button>
             <paper-icon-button
                 icon="arrow-back"
                 on-tap="_setTxnsModeToList"
-                hidden$="[[_txnsModeIsList(txnsMode)]]"></paper-icon-button>
-            <div main-title hidden$="[[_txnsModeNotList(txnsMode)]]">Pluot</div>
-            <div main-title hidden$="[[_txnsModeNotAdd(txnsMode)]]">New Transaction</div>
+                hidden$="[[_eq(txnsMode, 'list')]]"></paper-icon-button>
+            <div main-title hidden$="[[!_eq(txnsMode, 'list')]]">Pluot</div>
+            <div main-title hidden$="[[!_eq(txnsMode, 'add')]]">New Transaction</div>
             <pluot-search
                 id="txnSearch"
                 class="flex"
@@ -65,12 +65,12 @@
             <paper-icon-button
                 icon="add"
                 on-tap="_setTxnsModeToAdd"
-                hidden$="[[_txnsModeNotList(txnsMode)]]"></paper-icon-button>
+                hidden$="[[!_eq(txnsMode, 'list')]]"></paper-icon-button>
             <paper-icon-button
                 icon="search"
                 toggles
                 active="{{txnsSearching}}"
-                hidden$="[[_txnsModeNotList(txnsMode)]]"></paper-icon-button>
+                hidden$="[[!_eq(txnsMode, 'list')]]"></paper-icon-button>
           </app-toolbar>
           <app-toolbar page="upload">
             <paper-icon-button icon="menu" toggles active="{{drawerOpened}}"></paper-icon-button>
