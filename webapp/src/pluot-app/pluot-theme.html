@@ -4,10 +4,17 @@
   <template>
     <style>
       * {
-        --primary-color: #583759;
-        --primary-background-color: var(--light-theme-background-color);
-        --primary-text-color: var(--light-theme-text-color);
-        --secondary-text-color: var(--light-theme-secondary-color);
+        --light-theme-primary-color: plum;
+        --dark-theme-primary-color: #f323ff;
+        --primary-color: var(--dark-theme-primary-color);
+
+        --light-theme-text-on-primary-color: white;
+        --dark-theme-text-on-primary-color: black;
+        --text-on-primary-color: var(--dark-theme-text-on-primary-color);
+
+        --primary-background-color: var(--dark-theme-background-color);
+        --primary-text-color: var(--dark-theme-text-color);
+        --secondary-text-color: var(--dark-theme-secondary-color);
       }
     </style>
   </template>
