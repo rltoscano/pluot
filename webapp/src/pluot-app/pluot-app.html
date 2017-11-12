@@ -34,24 +34,26 @@
     <style include="iron-flex iron-flex-alignment pluot-theme">
       :host {
         @apply --layout-flex;
+        color: var(--primary-text-color);
+        background-color: var(--primary-background-color);
       }
       app-header {
         background-color: var(--primary-color);
-        color: var(--dark-theme-text-color);
+        color: var(--text-on-primary-color);
         @apply --paper-font-title;
       }
       app-toolbar paper-icon-button {
-        --paper-icon-button-ink-color: var(--dark-theme-text-color);
+        --paper-icon-button-ink-color: var(--text-on-primary-color);
       }
       app-drawer {
         --app-drawer-content-container: {
-          background-color: var(--dark-theme-background-color);
-          color: var(--dark-theme-text-color);
+          background-color: var(--primary-color);
+          color: var(--text-on-primary-color);
         };
       }
       app-drawer paper-listbox {
-        background-color: var(--dark-theme-background-color);
-        color: var(--dark-theme-text-color);
+        background-color: var(--primary-color);
+        color: var(--text-on-primary-color);
       }
       paper-item {
         cursor: pointer;
