@@ -1,18 +1,18 @@
 <link rel="import" href="../../bower_components/polymer/polymer-element.html">
 
 <link rel="import" href="../pluot-app/pluot-globals.html">
+<link rel="import" href="../pluot-app/pluot-theme.html">
 
 <link rel="import" href="../../bower_components/paper-input/paper-input.html">
 
 <dom-module id="pluot-search">
   <template>
-    <style>
+    <style include="pluot-theme">
       paper-input {
-        --paper-input-container-input-color: #fff;
-        --paper-input-container-focus-color: #fff;
-        background-color: #583759;
-        padding-left: 16px;
-        padding-right: 16px;
+        --paper-input-container-input-color: var(--text-on-primary-color);
+        --paper-input-container-focus-color: var(--text-on-primary-color);
+        background-color: var(--primary-color);
+        margin: 0 16px 0 16px;
       }
     </style>
 
