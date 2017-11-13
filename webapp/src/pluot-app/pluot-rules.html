@@ -101,19 +101,17 @@
         <h2>Active Rules</h2>
         <iron-list items="[[listRulesResp.rules]]">
           <template>
-            <div>
-              <div class="rule-entry layout vertical" on-tap="_editExisting" rule="[[item]]">
-                <div class="layout horizontal center">
-                  <div class="pattern flex">[[item.pattern]]</div>
-                  <template is="dom-if" if="[[item.regexp]]">
-                    <div class="regexp">regexp</div>
-                  </template>
-                </div>
-                <div class="layout horizontal center">
-                  <div class="display-name flex">[[item.displayName]]</div>
-                  <div class="category">
-                    <iron-icon icon="[[_computeCategoryIcon(item.category)]]"></iron-icon>
-                  </div>
+            <div class="rule-entry layout vertical" on-tap="_editExisting" rule="[[item]]">
+              <div class="layout horizontal center">
+                <div class="pattern flex">[[item.pattern]]</div>
+                <template is="dom-if" if="[[item.regexp]]">
+                  <div class="regexp">regexp</div>
+                </template>
+              </div>
+              <div class="layout horizontal center">
+                <div class="display-name flex">[[item.displayName]]</div>
+                <div class="category">
+                  <iron-icon icon="[[_computeCategoryIcon(item.category)]]"></iron-icon>
                 </div>
               </div>
             </div>
