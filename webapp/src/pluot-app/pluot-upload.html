@@ -15,22 +15,27 @@
 <link rel="import" href="../../bower_components/paper-listbox/paper-listbox.html">
 <link rel="import" href="../../bower_components/paper-toast/paper-toast.html">
 
+<link rel="import" href="pluot-theme.html">
 <script src="common.js"></script>
 
 <dom-module id="pluot-upload">
   <template>
-    <style include="iron-flex iron-flex-alignment">
+    <style include="iron-flex iron-flex-alignment pluot-theme">
       :host {
-        font-family: sans-serif;
+        @apply --paper-font-body1;
         padding: 16px;
-        @apply(--layout-vertical);
+        @apply --layout-vertical;
+        background-color: var(--primary-background-color);
+      }
+      paper-button, iron-list paper-item.is-selected-true {
+        background-color: var(--primary-color);
+        color: var(--text-on-primary-color);
       }
       .dupDate {
         width: 64px;
       }
-      iron-list paper-item.is-selected-true {
-        background-color: #583759;
-        color: #fff;
+      h2 {
+        @apply --paper-font-subhead;
       }
       .actions {
         padding-top: 16px;

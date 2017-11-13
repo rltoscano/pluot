@@ -3,6 +3,7 @@
 <link rel="import" href="../pluot-app/pluot-amount.html">
 <link rel="import" href="../pluot-app/pluot-category.html">
 <link rel="import" href="../pluot-app/pluot-format.html">
+<link rel="import" href="../pluot-app/pluot-theme.html">
 
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../../bower_components/iron-icons/iron-icons.html">
@@ -13,10 +14,11 @@
 
 <dom-module id="pluot-split">
   <template>
-    <style include="iron-flex iron-flex-alignment">
+    <style include="iron-flex iron-flex-alignment pluot-theme">
       :host {
         display: block;
         padding: 16px;
+        color: var(--primary-text-color);
       }
       .splitamount {
         width: 60px;
@@ -34,11 +36,22 @@
         margin: 0;
       }
       #doneButton {
-        background-color: #583759;
-        color: #fff;
+        background-color: var(--primary-color);
+        color: var(--text-on-primary-color);
       }
       #doneButton[disabled] {
-        background-color: #ab9bac;
+        background-color: var(--disabled-text-color);
+      }
+      h2 {
+        @apply --paper-font-subhead;
+      }
+      paper-input {
+        --paper-input-container: {
+          padding-bottom: 24px;
+        };
+      }
+      pluot-amount {
+        padding-bottom: 24px;
       }
     </style>
 

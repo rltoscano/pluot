@@ -2,6 +2,7 @@
 
 <link rel="import" href="../pluot-app/pluot-category.html">
 <link rel="import" href="../pluot-app/pluot-globals.html">
+<link rel="import" href="../pluot-app/pluot-theme.html">
 
 <link rel="import" href="../../bower_components/iron-ajax/iron-ajax.html">
 <link rel="import" href="../../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
@@ -24,36 +25,43 @@
 
 <dom-module id="pluot-rules">
   <template>
-    <style include="iron-flex iron-flex-alignment">
+    <style include="iron-flex iron-flex-alignment pluot-theme">
       :host {
-        @apply(--layout-vertical);
-        @apply(--layout-flex);
+        display: block;
+        background-color: var(--primary-background-color);
+        color: var(--primary-text-color);
         font-family: sans-serif;
       }
       h2 {
         padding-left: 16px;
         padding-right: 16px;
+        @apply --paper-font-title;
+        color: var(--primary-color);
       }
       .rule-entry {
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid;
+        border-bottom-color: var(--secondary-text-color);
+        padding: 8px;
+      }
+      .rule-entry:first-child {
+        border-top: 1px solid;
+        border-top-color: var(--secondary-text-color);
       }
       .pattern {
-        font-size: 16pt;
-        padding: 16px 16px 0 16px;
+        @apply --paper-font-body2;
         color: var(--primary-text-color);
       }
       .regexp {
+        @apply --paper-font-caption;
         color: var(--secondary-text-color);
-        font-size: 75%;
-        padding: 16px;
+        margin-left: 16px;
       }
       .display-name {
-        padding: 0 16px 0 16px;
-        font-size: 14pt;
+        @apply --paper-font-body1;
         color: var(--secondary-text-color);
       }
       .category {
-        padding: 16px;
+        margin-left: 16px;
       }
       .adding-page {
         padding: 16px;
@@ -71,8 +79,8 @@
         attr-for-selected="adding">
       <div adding="false">
         <h2>Proposed Rules</h2>
-        <template is="dom-repeat" items="[[listRuleProposalsResp.rules]]">
-          <div>
+        <div>
+          <template is="dom-repeat" items="[[listRuleProposalsResp.rules]]">
             <div class="rule-entry layout vertical" on-tap="_editExisting" rule="[[item]]">
               <div class="layout horizontal center">
                 <div class="pattern flex">[[item.pattern]]</div>
@@ -87,11 +95,11 @@
                 </div>
               </div>
             </div>
-          </div>
-        </template>
+          </template>
+        </div>
 
         <h2>Active Rules</h2>
-        <iron-list scroll-target="document" items="[[listRulesResp.rules]]">
+        <iron-list items="[[listRulesResp.rules]]">
           <template>
             <div>
               <div class="rule-entry layout vertical" on-tap="_editExisting" rule="[[item]]">
