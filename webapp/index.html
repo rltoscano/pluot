@@ -24,6 +24,14 @@
         display: flex;
       }
     </style>
+    <script>
+      window.addEventListener('load', function() {
+        // Register service worker if supported.
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('/service-worker.js');
+        }
+      });
+    </script>
   </head>
   <body>
     <pluot-app></pluot-app>

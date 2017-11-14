@@ -7,8 +7,29 @@ handlers:
   static_files: web/index.html
   upload: web/index.html
   secure: always
+- url: /index.html
+  login: required
+  static_files: web/index.html
+  upload: web/index.html
+  secure: always
 - url: /bower_components
   static_dir: web/bower_components
+  secure: always
+  auth_fail_action: unauthorized
+- url: /service-worker.js
+  static_files: web/service-worker.js
+  upload: web/service-worker.js
+  secure: always
+- url: /manifest.json
+  static_files: web/manifest.json
+  upload: web/manifest.json
+  secure: always
+- url: /favicon.ico
+  static_files: web/images/favicon.ico
+  upload: web/images/favicon.ico
+  secure: always
+- url: /images
+  static_dir: web/images
   secure: always
   auth_fail_action: unauthorized
 - url: /src

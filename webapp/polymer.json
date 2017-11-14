@@ -3,5 +3,11 @@
     "rules": [
       "polymer-2"
     ]
-  }
+  },
+  "extraDependencies": [
+    "manifest.json",
+    "images/favicon.ico",
+    "images/manifest/icon-192x192.png",
+    "images/manifest/icon-512x512.png"
+  ]
 }

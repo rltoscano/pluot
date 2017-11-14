@@ -8,7 +8,7 @@ import (
 
 func main() {
 	println("Building polymer webapp.")
-	c := exec.Command("polymer", "build")
+	c := exec.Command("polymer", "build", "--add-service-worker")
 	c.Dir = "../webapp"
 	c.Stdout = os.Stdout
 	c.Stderr = os.Stderr
