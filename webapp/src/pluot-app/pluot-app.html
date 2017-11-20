@@ -33,7 +33,8 @@
   <template>
     <style include="iron-flex iron-flex-alignment pluot-theme">
       :host {
-        @apply --layout-flex;
+        width: 100%;
+        height: 100%;
         color: var(--primary-text-color);
         background-color: var(--primary-background-color);
       }
@@ -148,7 +149,7 @@
             can-delete="{{rulesCanDelete}}"
             can-confirm="{{rulesCanConfirm}}"
             adding="{{rulesAdding}}"></pluot-rules>
-        <pluot-agg page="agg" class="flex"></pluot-agg>
+        <pluot-agg page="agg"></pluot-agg>
       </iron-pages>
 
     </app-header-layout>

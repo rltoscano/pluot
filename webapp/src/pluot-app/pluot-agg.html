@@ -15,36 +15,46 @@
   <template>
     <style include="iron-flex iron-flex-alignment pluot-theme">
       :host {
-        font-family: sans-serif;
-        padding: 16px;
         background-color: var(--primary-background-color);
+      }
+      paper-dropdown-menu {
+        margin: 16px;
+      }
+      google-chart {
+        margin-left: 16px;
+        margin-bottom: 16px;
       }
     </style>
     <pluot-globals id="globals" categories="{{_categories}}"></pluot-globals>
-    <div>
-      <paper-dropdown-menu label="Time Window">
-        <paper-listbox
-            slot="dropdown-content"
-            attr-for-selected="timeWindow"
-            selected="{{_timeWindow}}">
-          <paper-item timeWindow="last30Days">Last 30 days</paper-item>
-          <paper-item timeWindow="lastMonth">Last month</paper-item>
-          <paper-item timeWindow="last6Months">Last 6 months</paper-item>
-        </paper-listbox>
-      </paper-dropdown-menu>
-    </div>
+    <paper-dropdown-menu label="Time Window">
+      <paper-listbox
+          slot="dropdown-content"
+          attr-for-selected="timeWindow"
+          selected="{{_timeWindow}}">
+        <paper-item timeWindow="last30Days">Last 30 days</paper-item>
+        <paper-item timeWindow="lastMonth">Last month</paper-item>
+        <paper-item timeWindow="last6Months">Last 6 months</paper-item>
+      </paper-listbox>
+    </paper-dropdown-menu>
     <google-chart
         id="donut"
         type="pie"
         options='{"pieHole": 0.3}'
         rows="[[_computeTotals(_aggResp, _categories)]]"
-        cols='[{"label": "Category", "type": "string"},{"label": "Total", "type": "number"}]'
+        cols='[
+          {"label": "Category", "type": "string"},
+          {"label": "Total", "type": "number"}
+        ]'
         on-google-chart-select='_navigateToTxnsPageFromDonutChart'></google-chart>
     <google-chart
         id="column"
         type="column"
         rows="[[_computeMonthly(_aggResp)]]"
-        cols='[{"label": "Month", "type": "string"}, {"label": "Spending", "type": "number"}, {"label": "Income", "type": "number"}]'
+        cols='[
+          {"label": "Month", "type": "string"},
+          {"label": "Spending", "type": "number"},
+          {"label": "Income", "type": "number"}
+        ]'
         on-google-chart-select='_navigateToTxnsPageFromColumnChart'
         options='{"colors": ["rgb(220, 57, 18)", "rgb(51, 102, 204)"]}'></google-chart>
     <iron-ajax
@@ -68,6 +78,10 @@
           _start: { type: String, computed: '_computeStart(_timeWindow)' },
           _timeWindow: { type: String, value: 'last30Days' },
         };
+      }
+      connectedCallback() {
+        super.connectedCallback();
+        window.addEventListener('resize', this._redrawCharts.bind(this));
       }
       _computeEnd(_timeWindow) {
         var end = new Date();
@@ -128,6 +142,16 @@
             this.$.column.selection = [];
           }
         }.bind(this), 0);
+      }
+      _redrawCharts() {
+        const width = `${this.offsetWidth - 32}px`;
+        const height = `${(this.offsetWidth / 2) - 32}px`;
+        this.$.donut.style.width = width;
+        this.$.donut.style.height = height;
+        this.$.donut.redraw();
+        this.$.column.style.width = width;
+        this.$.column.style.height = height;
+        this.$.column.redraw();
       }
       _timeWindowToQueryString(start, end) {
         return `after:${String(start.getFullYear()).padStart(4, '0')}`
