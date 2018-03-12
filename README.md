@@ -13,7 +13,7 @@
 To deploy to App Engine, you'll need to [create a Google Cloud
 project](https://cloud.google.com/resource-manager/docs/creating-managing-projects).
 
-1. Run `go run tool/package_webapp.go` to build the web app and copy it to the
+1. Run `go run package_webapp.go` from the `tool` folder to build the web app and copy it to the
    service folder.
 1. Run `dev_appserver.py service/src/github.com/rltoscano/pluot/app.yaml` to run
    a development server. The server will be started at http://localhost:8080

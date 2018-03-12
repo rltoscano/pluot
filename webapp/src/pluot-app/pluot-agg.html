@@ -26,16 +26,29 @@
       }
     </style>
     <pluot-globals id="globals" categories="{{_categories}}"></pluot-globals>
-    <paper-dropdown-menu label="Time Window">
-      <paper-listbox
-          slot="dropdown-content"
-          attr-for-selected="timeWindow"
-          selected="{{_timeWindow}}">
-        <paper-item timeWindow="last30Days">Last 30 days</paper-item>
-        <paper-item timeWindow="lastMonth">Last month</paper-item>
-        <paper-item timeWindow="last6Months">Last 6 months</paper-item>
-      </paper-listbox>
-    </paper-dropdown-menu>
+    <div class="layout horizontal">
+      <paper-dropdown-menu label="Time Window">
+        <paper-listbox
+            slot="dropdown-content"
+            attr-for-selected="timeWindow"
+            selected="{{_timeWindow}}">
+          <paper-item timeWindow="last30Days">Last 30 days</paper-item>
+          <paper-item timeWindow="lastMonth">Last month</paper-item>
+          <paper-item timeWindow="last6Months">Last 6 months</paper-item>
+        </paper-listbox>
+      </paper-dropdown-menu>
+      <paper-dropdown-menu label="Category">
+        <paper-listbox
+            slot="dropdown-content"
+            attr-for-selected="code"
+            selected="{{_catFilter}}">
+          <paper-item code="0">All Categories</paper-item>
+          <template is="dom-repeat" items="[[_categories]]">
+            <paper-item code="[[item.code]]">[[item.displayName]]</paper-item>
+          </template>
+        </paper-listbox>
+      </paper-dropdown-menu>
+    </div>
     <google-chart
         id="donut"
         type="pie"
@@ -63,7 +76,7 @@
         content-type="application/json"
         handle-as="json"
         url="[[$.globals.urlPrefix]]aggs"
-        body='{"start": "[[_start]]", "end": "[[_end]]"}'
+        body='{"start": "[[_start]]", "end": "[[_end]]", "categoryFilter": [[_catFilter]]}'
         last-response="{{_aggResp}}"></iron-ajax>
   </template>
   <script>
@@ -73,6 +86,7 @@
       static get properties() {
         return {
           _aggResp: { type: Object, value: { totals: [], months: [] } },
+          _catFilter: { type: Number, value: 0 },
           _categories: { type: Array, value: [] },
           _end: { type: String, computed: '_computeEnd(_timeWindow)' },
           _start: { type: String, computed: '_computeStart(_timeWindow)' },
@@ -131,17 +145,24 @@
         }.bind(this), 0);
       }
       _navigateToTxnsPageFromColumnChart(evt) {
-        setTimeout(function() {
-          var selection = this.$.column.selection;
-          if (selection.length > 0) {
-            var start = new Date(this.$.column.rows[selection[0].row][0]);
-            var end = new Date(start.getFullYear(), start.getMonth() + 1);
-            var isExpense = (selection[0].column == 1);
+        setTimeout(() => {
+          const selection = this.$.column.selection;
+          if (selection.length == 0) {
+            return;
+          }
+          const start = new Date(this.$.column.rows[selection[0].row][0]);
+          const end = new Date(start.getFullYear(), start.getMonth() + 1);
+          if (this._catFilter == 0) {
+            const isExpense = (selection[0].column == 1);
             window.location.hash =
                 `/txns/expense:${isExpense} ` + this._timeWindowToQueryString(start, end);
-            this.$.column.selection = [];
+          } else {
+            const catName = this.$.globals.categoryName(this._catFilter);
+            window.location.hash =
+                `/txns/cat:"${catName}" ` + this._timeWindowToQueryString(start, end);
           }
-        }.bind(this), 0);
+          this.$.column.selection = [];
+        }, 0);
       }
       _redrawCharts() {
         const width = `${this.offsetWidth - 32}px`;

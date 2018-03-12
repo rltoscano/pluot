@@ -21,8 +21,9 @@ const (
 // ComputeAggregationRequest is a JSON request for the ComputeAggregation
 // method.
 type ComputeAggregationRequest struct {
-	Start time.Time `json:"-"`
-	End   time.Time `json:"-"`
+	Start          time.Time `json:"-"` // Special field handling in Un/marshal functions below.
+	End            time.Time `json:"-"` // Special field handling in Un/marshal functions below.
+	CategoryFilter int       `json:"categoryFilter"`
 }
 
 // MarshalJSON marshals a ComputeAggregationRequest to JSON while converting `Start` and `End` to a
@@ -99,7 +100,7 @@ func computeAggregation(c context.Context, r *http.Request, u *user.User) (inter
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, pihen.Error{Status: http.StatusBadRequest, Message: err.Error()}
 	}
-	txns, err := loadTxns(c, req.Start, req.End, CategoryUnknown, true)
+	txns, err := loadTxns(c, req.Start, req.End, req.CategoryFilter, true)
 	if err != nil {
 		return nil, err
 	}

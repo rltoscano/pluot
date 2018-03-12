@@ -27,10 +27,7 @@ func TestOneDayAgg(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	txn := Txn{PostDate: postDate, Category: 3, Amount: 1000}
-	if _, err = datastore.Put(c, datastore.NewKey(c, "Txn", "", 1, nil), &txn); err != nil {
-		t.Fatal(err)
-	}
+	persistTxn(c, t, Txn{ID: 1, PostDate: postDate, Category: 3, Amount: 1000})
 	d, _ := time.ParseDuration("500ms")
 	time.Sleep(d)
 	r := createReq(t, `{
@@ -43,6 +40,42 @@ func TestOneDayAgg(t *testing.T) {
 	}
 	if resp.(ComputeAggregationResponse).Totals[3] != 1000 {
 		t.Fatalf("Wanted resp.Totals[3] to be 1000, but was %v", resp.(ComputeAggregationResponse).Totals[3])
+	}
+}
+
+func TestCategoryFilter(t *testing.T) {
+	c, done := aeContext(t)
+	defer done()
+	postDate, err := time.Parse("Mon, 02 Jan 2006 15:04:05 MST", "Tue, 10 Oct 2017 00:00:00 GMT")
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	persistTxn(c, t, Txn{ID: 1, PostDate: postDate, Category: CategoryGroceries, Amount: 3000})
+	persistTxn(c, t, Txn{ID: 2, PostDate: postDate, Category: CategoryEatingOut, Amount: 2000})
+	d, _ := time.ParseDuration("500ms")
+	time.Sleep(d)
+	// Create request that filters groceries (4).
+	r := createReq(t, `{
+    "start": "Tue, 10 Oct 2017 00:00:00 GMT",
+    "end": "Tue, 11 Oct 2017 00:00:00 GMT",
+		"categoryFilter": 4
+  }`)
+	resp, err := computeAggregation(c, r, nil)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	aggResp := resp.(ComputeAggregationResponse)
+	if aggResp.Totals[CategoryGroceries] != 3000 {
+		t.Fatalf("Wanted aggResp.Totals[CategoryGroceries] to be 3000, but was %v", aggResp.Totals[CategoryGroceries])
+	}
+	if aggResp.Totals[CategoryEatingOut] != 0 {
+		t.Fatalf("Wanted aggResp.Totals[CategoryEatingOut] to be 0, but was %v", aggResp.Totals[CategoryEatingOut])
+	}
+	if len(aggResp.Months) != 1 {
+		t.Fatalf("Wanted len(aggResp.Months) to be 1, but was %v", len(aggResp.Months))
+	}
+	if aggResp.Months[0].Expense != -3000 {
+		t.Fatalf("Wanted aggResp.Months[0].Expense to be 3000, but was %v", aggResp.Months[0])
 	}
 }
 
@@ -60,4 +93,10 @@ func createReq(t *testing.T, body string) *http.Request {
 		t.Fatal(err)
 	}
 	return r
+}
+
+func persistTxn(c context.Context, t *testing.T, txn Txn) {
+	if _, err := datastore.Put(c, datastore.NewKey(c, "Txn", "", txn.ID, nil), &txn); err != nil {
+		t.Fatal(err)
+	}
 }
